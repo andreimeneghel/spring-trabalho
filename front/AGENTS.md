@@ -1,3 +1,13 @@
+# Frontend do SoundHub
+
+> **Leia primeiro o [AGENTS.md da raiz](../AGENTS.md)** — ele tem as regras do projeto
+> (sempre testar, manter o FRONTEND.md atualizado, encerrar as portas) e a estrutura das
+> duas aplicações. O contrato da API está em [../FRONTEND.md](../FRONTEND.md).
+>
+> Este projeto roda na **porta 3001** (`next dev -p 3001`), porque a 3000 está ocupada por
+> outro container nesta máquina. Se mudar, ajuste também o CORS da API em
+> `java/src/main/java/com/soundhub/common/config/SecurityConfig.java`.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

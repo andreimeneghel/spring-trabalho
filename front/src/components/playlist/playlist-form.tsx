@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Globe, Lock } from "lucide-react";
 
 import type { EstadoPlaylist } from "@/app/(app)/playlists/actions";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type { PlaylistDetalhe } from "@/types/api";
 
 function BotaoSalvar({ rotulo }: { rotulo: string }) {
@@ -65,7 +66,7 @@ export function PlaylistForm({
 
       <div className="space-y-2">
         <Label htmlFor="descricao">
-          Descricao <span className="text-texto-fraco">(opcional)</span>
+          Descrição <span className="text-texto-fraco">(opcional)</span>
         </Label>
         <Textarea
           id="descricao"
@@ -81,16 +82,41 @@ export function PlaylistForm({
         )}
       </div>
 
-      <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-superficie p-4">
-        <div className="space-y-0.5">
-          <Label htmlFor="publica" className="cursor-pointer">
-            Playlist publica
-          </Label>
-          <p className="text-sm text-texto-suave">
-            {publica
-              ? "Qualquer pessoa pode ver esta playlist."
-              : "Só você consegue ver esta playlist."}
-          </p>
+      {/* A borda e o icone mudam junto com o switch, para a troca ficar obvia */}
+      <div
+        className={cn(
+          "flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors",
+          publica
+            ? "border-marca/40 bg-marca/5"
+            : "border-border bg-superficie",
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <span
+            className={cn(
+              "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+              publica
+                ? "bg-marca/15 text-marca dark:text-marca-clara"
+                : "bg-superficie-alta text-texto-suave",
+            )}
+          >
+            {publica ? (
+              <Globe className="size-4" />
+            ) : (
+              <Lock className="size-4" />
+            )}
+          </span>
+
+          <div className="space-y-0.5">
+            <Label htmlFor="publica" className="cursor-pointer">
+              {publica ? "Playlist pública" : "Playlist privada"}
+            </Label>
+            <p className="text-sm text-texto-suave">
+              {publica
+                ? "Qualquer pessoa pode ver esta playlist."
+                : "Só você consegue ver esta playlist."}
+            </p>
+          </div>
         </div>
 
         {/*
@@ -98,7 +124,12 @@ export function PlaylistForm({
           O input hidden ao lado e quem carrega o valor no submit.
         */}
         <input type="hidden" name="publica" value={publica ? "on" : "off"} />
-        <Switch id="publica" checked={publica} onCheckedChange={setPublica} />
+        <Switch
+          id="publica"
+          checked={publica}
+          onCheckedChange={setPublica}
+          className="mt-1"
+        />
       </div>
 
       <div className="flex gap-3">

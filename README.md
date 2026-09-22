@@ -12,6 +12,10 @@ spring-trabalho/
 └── front/    Interface web — Next.js 16, TypeScript, Tailwind, shadcn/ui
 ```
 
+> **Vai mexer no codigo?** Leia o [AGENTS.md](AGENTS.md) antes: ele explica como o projeto
+> esta montado, as decisoes ja tomadas e as regras que valem para toda alteracao (sempre
+> testar, manter o [FRONTEND.md](FRONTEND.md) atualizado, encerrar as portas ao terminar).
+
 ---
 
 ## Equipe
