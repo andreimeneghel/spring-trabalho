@@ -112,7 +112,7 @@ export function RegistroForm() {
                 onClick={() => setTipo(valor)}
                 aria-pressed={ativo}
                 className={cn(
-                  "rounded-lg border p-3 text-left transition-colors",
+                  "cursor-pointer rounded-lg border p-3 text-left transition-colors",
                   ativo
                     ? "border-marca bg-marca/10"
                     : "border-border bg-superficie hover:border-texto-fraco",

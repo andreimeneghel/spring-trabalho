@@ -118,6 +118,7 @@ export interface PlaylistResumo {
   nome: string;
   descricao: string | null;
   publica: boolean;
+  capa: string | null;        // data URI base64 (PNG/JPG) ou null
   criadaEm: string;           // ISO: "2026-09-22T10:15:30"
   donoId: number;
   donoNome: string;
@@ -200,7 +201,7 @@ Regras de validacao: `nome` ate 100 chars; `email` formato valido, ate 150; `sen
 | GET | `/playlists/usuario/{usuarioId}` | Privadas so aparecem se for voce |
 | GET | `/playlists/busca?nome=rock` | Busca **somente em playlists publicas** |
 | GET | `/playlists/{id}` | Detalhe com as musicas ordenadas |
-| POST | `/playlists` | `{ nome, descricao?, publica? }` → `201` |
+| POST | `/playlists` | `{ nome, descricao?, publica?, capa? }` → `201` |
 | PUT | `/playlists/{id}` | Mesmo body do POST — so o dono |
 | DELETE | `/playlists/{id}` | `204` — so o dono |
 | POST | `/playlists/{id}/musicas` | `{ musicaId }` — adiciona no fim |
@@ -210,11 +211,25 @@ Regras que o front precisa respeitar:
 
 - `nome` obrigatorio, ate 100 chars; `descricao` opcional, ate 300.
 - `publica` omitido = `true`.
+- `capa` opcional: data URI base64, **somente PNG ou JPG**, ate 2MB. String vazia ou
+  omitida grava `null`. Outro formato (GIF, SVG) volta `400` com a mensagem no campo
+  `capa`. SVG e barrado de proposito: poderia carregar script.
 - Nome duplicado **para o mesmo usuario** → `409`.
 - Musica ja presente na playlist → `409`.
 - Limite de 500 musicas por playlist → `400`.
 - Ao adicionar ou remover, a resposta ja traz a **playlist inteira atualizada** — use esse
   retorno para atualizar o estado em vez de refazer o GET.
+
+> **Capa da playlist — o que o front faz.** Ja implementado em
+> `components/playlist/seletor-capa.tsx`: le o arquivo com `FileReader.readAsDataURL`,
+> valida tipo e tamanho **antes** de enviar (para o usuario ver o erro na hora) e guarda o
+> data URI num `<input type="hidden" name="capa">`, que vai junto no submit do formulario.
+> A capa aparece no card da listagem (quadrado a esquerda, estilo Spotify) e grande no
+> detalhe da playlist. Sem capa, mostra um icone de nota musical sobre fundo verde.
+>
+> Imagens base64 usam `<img>` comum, nao `next/image` — o otimizador do Next nao processa
+> data URI.
+
 
 #### Avaliacao — exige token
 

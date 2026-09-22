@@ -10,6 +10,8 @@ public record PlaylistResumoDTO(
         String nome,
         String descricao,
         boolean publica,
+        /** Data URI em base64, ou null quando a playlist nao tem capa. */
+        String capa,
         LocalDateTime criadaEm,
         Long donoId,
         String donoNome,
@@ -21,6 +23,7 @@ public record PlaylistResumoDTO(
                 playlist.getNome(),
                 playlist.getDescricao(),
                 playlist.isPublica(),
+                playlist.getCapa(),
                 playlist.getCriadaEm(),
                 playlist.getUsuario().getId(),
                 playlist.getUsuario().getNome(),

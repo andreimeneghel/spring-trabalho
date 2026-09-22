@@ -23,15 +23,23 @@ function useMontado() {
 export function AlternarTema() {
   const { resolvedTheme, setTheme } = useTheme();
   const montado = useMontado();
-  const escuro = resolvedTheme === "dark";
+  // No servidor o tema ainda nao e conhecido: qualquer texto que dependa dele
+  // precisa esperar a montagem, senao o HTML do servidor difere do cliente.
+  const escuro = montado && resolvedTheme === "dark";
 
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={() => setTheme(escuro ? "light" : "dark")}
-      aria-label={escuro ? "Mudar para o tema claro" : "Mudar para o tema escuro"}
-      title={escuro ? "Tema claro" : "Tema escuro"}
+      aria-label={
+        montado
+          ? escuro
+            ? "Mudar para o tema claro"
+            : "Mudar para o tema escuro"
+          : "Alternar tema"
+      }
+      title={montado ? (escuro ? "Tema claro" : "Tema escuro") : "Alternar tema"}
     >
       {montado ? (
         escuro ? (

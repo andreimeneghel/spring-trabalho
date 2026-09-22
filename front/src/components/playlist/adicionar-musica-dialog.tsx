@@ -101,7 +101,7 @@ export function AdicionarMusicaDialog({
                   type="button"
                   disabled={pendente}
                   onClick={() => adicionar(musica)}
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-superficie-alta disabled:opacity-50"
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-superficie-alta disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">{musica.titulo}</p>

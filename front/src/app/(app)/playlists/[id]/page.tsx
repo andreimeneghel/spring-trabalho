@@ -50,7 +50,24 @@ export default async function PlaylistDetalhePage({ params }: Props) {
   return (
     <>
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
+        <div className="flex min-w-0 items-start gap-4">
+          {/* Capa grande, como nas plataformas de streaming */}
+          <span className="relative size-28 shrink-0 overflow-hidden rounded-lg bg-superficie-alta shadow-lg sm:size-36">
+            {playlist.capa ? (
+              // base64: o next/image nao otimiza data URI
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={playlist.capa} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="flex size-full items-center justify-center bg-marca/10">
+                <Music2
+                  className="size-10 text-marca dark:text-marca-clara"
+                  aria-hidden="true"
+                />
+              </span>
+            )}
+          </span>
+
+          <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">{playlist.nome}</h1>
             {!playlist.publica && (
@@ -73,6 +90,7 @@ export default async function PlaylistDetalhePage({ params }: Props) {
               ` · ${formatarDuracaoLonga(playlist.duracaoTotal)}`}
             {` · criada em ${formatarData(playlist.criadaEm)}`}
           </p>
+          </div>
         </div>
 
         {ehDono && (

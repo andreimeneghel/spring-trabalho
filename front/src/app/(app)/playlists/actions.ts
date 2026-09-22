@@ -17,6 +17,7 @@ function lerFormulario(formData: FormData) {
     nome: String(formData.get("nome") ?? "").trim(),
     descricao: String(formData.get("descricao") ?? "").trim() || undefined,
     publica: formData.get("publica") === "on",
+    capa: String(formData.get("capa") ?? "") || undefined,
   };
 }
 

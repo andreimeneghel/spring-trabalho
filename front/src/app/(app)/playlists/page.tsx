@@ -45,7 +45,7 @@ export default async function PlaylistsPage() {
           }
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {playlists.map((playlist) => (
             <PlaylistCard key={playlist.id} playlist={playlist} />
           ))}

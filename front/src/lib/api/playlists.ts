@@ -7,6 +7,8 @@ export interface PlaylistInput {
   nome: string;
   descricao?: string;
   publica?: boolean;
+  /** Data URI base64 (PNG ou JPG). String vazia ou omitido = sem capa. */
+  capa?: string;
 }
 
 /**

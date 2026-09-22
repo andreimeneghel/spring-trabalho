@@ -26,6 +26,8 @@ export interface PlaylistResumo {
   nome: string;
   descricao: string | null;
   publica: boolean;
+  /** Capa em data URI base64 (PNG ou JPG), ou null. */
+  capa: string | null;
   criadaEm: string;
   donoId: number;
   donoNome: string;
@@ -45,6 +47,8 @@ export interface PlaylistDetalhe {
   nome: string;
   descricao: string | null;
   publica: boolean;
+  /** Capa em data URI base64 (PNG ou JPG), ou null. */
+  capa: string | null;
   criadaEm: string;
   donoId: number;
   donoNome: string;

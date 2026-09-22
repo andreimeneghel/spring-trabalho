@@ -9,7 +9,7 @@ export default function AuthLayout({
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       {/* Painel de apresentacao — some no mobile */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden border-r border-border p-10 lg:flex">
+      <aside className="relative hidden flex-col justify-end overflow-hidden border-r border-border p-10 lg:flex">
         {/* A foto e vertical, entao cobre o painel inteiro sem cortar nada importante */}
         <Image
           src="/img/image-_25_.webp"
@@ -39,8 +39,27 @@ export default function AuthLayout({
           }}
         />
 
-        <div className="relative">
-          <LogoComNome sobreEscuro altura={76} />
+        {/* As duas marcas no topo, separadas por um risco vertical */}
+        <div className="absolute inset-x-10 top-10 flex items-center gap-5">
+          {/* as duas logos sao empilhadas: mesma altura deixa elas alinhadas */}
+          <LogoComNome sobreEscuro altura={72} />
+
+          <span aria-hidden="true" className="h-16 w-px shrink-0 bg-white/25" />
+
+          <div className="flex items-center gap-3">
+            <Image
+              src="/img/unesc-claro.png"
+              alt="UNESC"
+              width={460}
+              height={434}
+              className="h-16 w-auto"
+            />
+            <p className="max-w-40 text-xs leading-snug text-white/70">
+              Projeto acadêmico
+              <br />
+              Universidade do Extremo Sul Catarinense
+            </p>
+          </div>
         </div>
 
         <div className="relative max-w-sm space-y-4">
@@ -56,42 +75,66 @@ export default function AuthLayout({
           </p>
         </div>
 
-        <div className="relative flex items-center gap-3">
-          {/*
-            A logo da UNESC tem o texto em preto, que sumiria no fundo escuro:
-            o fundo branco arredondado devolve o contraste e preserva a marca.
-          */}
-          <span className="inline-flex items-center rounded-md bg-white/95 px-2.5 py-1.5">
-            <Image
-              src="/img/unesc.webp"
-              alt="UNESC"
-              width={64}
-              height={30}
-              className="h-7 w-auto"
-            />
-          </span>
-          <p className="text-xs leading-snug text-white/60">
-            Projeto acadêmico
-            <br />
-            Universidade do Extremo Sul Catarinense
-          </p>
-        </div>
       </aside>
 
-      <main className="relative flex items-center justify-center px-6 py-12">
-        {/* Mesmo brilho verde usado nas paginas internas */}
+      <main className="relative flex items-center justify-center overflow-hidden px-6 py-12">
+        {/*
+          No mobile a mesma foto cobre o fundo, com blur mais forte para nao
+          competir com o formulario. No desktop ela ja esta no painel ao lado.
+        */}
+        <Image
+          src="/img/image-_25_.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center blur-sm lg:hidden"
+        />
+
+        {/* Escurece a foto para os campos e o texto ficarem legiveis */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-black/80 lg:hidden"
+        />
+
+        {/* Brilho verde do topo, igual ao das paginas internas */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-marca/[0.10] to-transparent"
         />
 
-        <div className="absolute right-4 top-4">
+        {/*
+          So no desktop: no mobile o fundo e sempre a foto escura, entao trocar
+          o tema aqui nao mudaria nada visivel. O usuario troca depois de entrar.
+        */}
+        <div className="absolute right-4 top-4 z-10 hidden lg:block">
           <AlternarTema />
         </div>
 
-        <div className="relative w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <LogoComNome altura={64} />
+        {/*
+          No mobile o fundo e sempre a foto escura, entao o texto precisa ser
+          claro mesmo no tema claro. Em vez de mexer em cada pagina, o proprio
+          bloco redefine os tokens de cor ate o breakpoint lg — tudo que usa
+          `texto-suave`, `border` e afins se ajusta junto.
+        */}
+        <div className="auth-sobre-foto relative w-full max-w-sm">
+          {/*
+            No mobile as duas marcas tambem aparecem, mas sem o texto de apoio:
+            a tela e estreita e o formulario e o que importa aqui.
+          */}
+          <div className="mb-10 flex items-center justify-center gap-5 lg:hidden">
+            {/* as duas logos sao empilhadas: mesma altura deixa elas alinhadas */}
+            <LogoComNome sobreEscuro altura={72} />
+
+            <span aria-hidden="true" className="h-16 w-px shrink-0 bg-white/25" />
+
+            <Image
+              src="/img/unesc-claro.png"
+              alt="UNESC"
+              width={460}
+              height={434}
+              className="h-16 w-auto"
+            />
           </div>
           {children}
         </div>

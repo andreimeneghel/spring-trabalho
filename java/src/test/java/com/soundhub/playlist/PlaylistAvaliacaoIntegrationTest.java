@@ -68,7 +68,7 @@ class PlaylistAvaliacaoIntegrationTest {
     @DisplayName("cria playlist e adiciona musicas na ordem, somando a duracao")
     void criarEAdicionarMusicas() {
         PlaylistDetalheDTO playlist = playlistService.criar(
-                new PlaylistRequestDTO("Favoritas", "as melhores", true), ouvinte);
+                new PlaylistRequestDTO("Favoritas", "as melhores", true, null), ouvinte);
 
         assertThat(playlist.id()).isNotNull();
         assertThat(playlist.totalMusicas()).isZero();
@@ -88,7 +88,7 @@ class PlaylistAvaliacaoIntegrationTest {
     @DisplayName("nao deixa adicionar a mesma musica duas vezes")
     void musicaDuplicada() {
         PlaylistDetalheDTO playlist = playlistService.criar(
-                new PlaylistRequestDTO("Rock", null, true), ouvinte);
+                new PlaylistRequestDTO("Rock", null, true, null), ouvinte);
         playlistService.adicionarMusica(playlist.id(), new AdicionarMusicaDTO(musica1.getId()), ouvinte);
 
         assertThatThrownBy(() -> playlistService.adicionarMusica(
@@ -100,7 +100,7 @@ class PlaylistAvaliacaoIntegrationTest {
     @DisplayName("ao remover uma musica do meio, a ordem e refeita sem buracos")
     void removerMusicaReordena() {
         PlaylistDetalheDTO playlist = playlistService.criar(
-                new PlaylistRequestDTO("Mix", null, true), ouvinte);
+                new PlaylistRequestDTO("Mix", null, true, null), ouvinte);
         playlistService.adicionarMusica(playlist.id(), new AdicionarMusicaDTO(musica1.getId()), ouvinte);
         playlistService.adicionarMusica(playlist.id(), new AdicionarMusicaDTO(musica2.getId()), ouvinte);
 
@@ -115,10 +115,10 @@ class PlaylistAvaliacaoIntegrationTest {
     @Test
     @DisplayName("nao deixa o mesmo usuario ter duas playlists com o mesmo nome")
     void nomeDuplicado() {
-        playlistService.criar(new PlaylistRequestDTO("Repetida", null, true), ouvinte);
+        playlistService.criar(new PlaylistRequestDTO("Repetida", null, true, null), ouvinte);
 
         assertThatThrownBy(() ->
-                playlistService.criar(new PlaylistRequestDTO("repetida", null, true), ouvinte))
+                playlistService.criar(new PlaylistRequestDTO("repetida", null, true, null), ouvinte))
                 .isInstanceOf(ConflitoException.class);
     }
 
@@ -126,7 +126,7 @@ class PlaylistAvaliacaoIntegrationTest {
     @DisplayName("playlist privada nao aparece para outro usuario")
     void playlistPrivada() {
         PlaylistDetalheDTO privada = playlistService.criar(
-                new PlaylistRequestDTO("Secreta", null, false), ouvinte);
+                new PlaylistRequestDTO("Secreta", null, false, null), ouvinte);
 
         assertThatThrownBy(() -> playlistService.buscarPorId(privada.id(), outro))
                 .isInstanceOf(AccessDeniedException.class);
@@ -139,7 +139,7 @@ class PlaylistAvaliacaoIntegrationTest {
     @DisplayName("so o dono altera a playlist")
     void somenteDonoAltera() {
         PlaylistDetalheDTO playlist = playlistService.criar(
-                new PlaylistRequestDTO("Minha", null, true), ouvinte);
+                new PlaylistRequestDTO("Minha", null, true, null), ouvinte);
 
         assertThatThrownBy(() -> playlistService.excluir(playlist.id(), outro))
                 .isInstanceOf(AccessDeniedException.class);

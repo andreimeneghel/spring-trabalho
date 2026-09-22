@@ -90,6 +90,7 @@ public class PlaylistService {
                 .nome(nome)
                 .descricao(normalizarDescricao(dto.descricao()))
                 .publica(dto.isPublica())
+                .capa(normalizarCapa(dto.capa()))
                 .usuario(logado)
                 .build();
 
@@ -112,6 +113,7 @@ public class PlaylistService {
         playlist.setNome(nome);
         playlist.setDescricao(normalizarDescricao(dto.descricao()));
         playlist.setPublica(dto.isPublica());
+        playlist.setCapa(normalizarCapa(dto.capa()));
         log.info("Playlist atualizada: id={}", id);
 
         return PlaylistDetalheDTO.from(playlistRepository.save(playlist));
@@ -183,6 +185,14 @@ public class PlaylistService {
         if (!playlist.isPublica() && !playlist.getUsuario().getId().equals(logado.getId())) {
             throw new AccessDeniedException("Esta playlist e privada");
         }
+    }
+
+    /** String vazia vinda do formulario vira null, para nao gravar lixo no banco. */
+    private String normalizarCapa(String capa) {
+        if (capa == null || capa.isBlank()) {
+            return null;
+        }
+        return capa;
     }
 
     private String normalizarDescricao(String descricao) {

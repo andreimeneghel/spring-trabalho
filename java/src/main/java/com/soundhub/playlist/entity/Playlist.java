@@ -41,6 +41,10 @@ public class Playlist {
     @Column(nullable = false)
     private boolean publica;
 
+    /** Capa como data URI em base64. Null quando a playlist nao tem capa. */
+    @Column(columnDefinition = "TEXT")
+    private String capa;
+
     @Column(name = "criada_em", nullable = false, updatable = false)
     private LocalDateTime criadaEm;
 

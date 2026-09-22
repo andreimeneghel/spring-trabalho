@@ -13,11 +13,21 @@ const LINKS = [
   { href: "/perfil", rotulo: "Perfil", Icone: User },
 ];
 
-export function NavLinks({ aoNavegar }: { aoNavegar?: () => void }) {
+export function NavLinks({
+  aoNavegar,
+  /** Na sidebar recolhida mostra so o icone, com o rotulo no hover. */
+  recolhida = false,
+}: {
+  aoNavegar?: () => void;
+  recolhida?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
-    <nav className="space-y-1" aria-label="Navegação principal">
+    <nav
+      className={cn(recolhida ? "space-y-2" : "space-y-1")}
+      aria-label="Navegação principal"
+    >
       {LINKS.map(({ href, rotulo, Icone }) => {
         const ativo = pathname === href || pathname.startsWith(`${href}/`);
         return (
@@ -26,15 +36,31 @@ export function NavLinks({ aoNavegar }: { aoNavegar?: () => void }) {
             href={href}
             onClick={aoNavegar}
             aria-current={ativo ? "page" : undefined}
+            title={recolhida ? rotulo : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+              "group/link relative flex items-center gap-3 rounded-md text-sm transition-colors",
+              recolhida ? "justify-center px-2 py-2.5" : "px-3 py-2",
               ativo
                 ? "bg-superficie-alta font-bold text-foreground"
                 : "text-texto-suave hover:bg-superficie hover:text-foreground",
             )}
           >
-            <Icone className={cn("size-4", ativo && "text-marca dark:text-marca-clara")} />
-            {rotulo}
+            <Icone
+              className={cn(
+                "shrink-0",
+                recolhida ? "size-5" : "size-4",
+                ativo && "text-marca dark:text-marca-clara",
+              )}
+            />
+
+            {recolhida ? (
+              // rotulo flutuante a direita, so no hover
+              <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-md bg-superficie-alta px-2 py-1 text-xs font-bold text-foreground opacity-0 shadow-md transition-opacity group-hover/link:opacity-100">
+                {rotulo}
+              </span>
+            ) : (
+              rotulo
+            )}
           </Link>
         );
       })}

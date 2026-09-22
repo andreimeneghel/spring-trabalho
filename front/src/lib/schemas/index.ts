@@ -29,6 +29,8 @@ export const playlistSchema = z.object({
   nome: z.string().min(1, "O nome é obrigatório").max(100, "Máximo de 100 caracteres"),
   descricao: z.string().max(300, "Máximo de 300 caracteres").optional(),
   publica: z.boolean(),
+  // a validacao de formato e tamanho acontece no componente e no backend
+  capa: z.string().optional(),
 });
 
 export const avaliacaoSchema = z.object({

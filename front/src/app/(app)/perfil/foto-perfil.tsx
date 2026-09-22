@@ -92,7 +92,7 @@ export function FotoPerfil({ usuario }: { usuario: Usuario }) {
           onClick={() => inputRef.current?.click()}
           disabled={pendente}
           aria-label="Escolher foto de perfil"
-          className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border-2 border-background bg-marca text-white transition-colors hover:bg-marca-clara hover:text-black disabled:opacity-60"
+          className="absolute -bottom-1 -right-1 flex size-8 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-marca text-white transition-colors hover:bg-marca-clara hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Camera className="size-4" />
         </button>
