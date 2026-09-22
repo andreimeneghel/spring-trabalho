@@ -30,8 +30,8 @@ spring-trabalho/
 | Integrante | Módulo | Estado |
 |---|---|---|
 | Andrei | `usuario/`, `auth/` | pronto |
-| Gustavo | `artista/` (Artista, Album) | só entidades |
-| Douglas | `musica/` (Musica, Categoria) | só entidades + repository |
+| Gustavo | `artista/` (Artista, Album)  |
+| Douglas | `musica/` (Musica, Categoria) |
 | Luiz Fellipe | `playlist/`, `avaliacao/` | pronto, com testes |
 
 **Importante:** `artista/` e `musica/` têm apenas entity e repository porque Playlist e
