@@ -17,7 +17,9 @@ export interface EstadoFormulario {
 async function autenticar(
   rota: "/auth/login" | "/auth/registrar",
   corpo: unknown,
-): Promise<{ ok: true; dados: TokenResponse } | { ok: false } & EstadoFormulario> {
+): Promise<
+  { ok: true; dados: TokenResponse } | ({ ok: false } & EstadoFormulario)
+> {
   let res: Response;
 
   try {
@@ -28,12 +30,16 @@ async function autenticar(
       cache: "no-store",
     });
   } catch {
-    return { ok: false, erro: "Não foi possível conectar ao servidor. A API está rodando?" };
+    return {
+      ok: false,
+      erro: "Não foi possível conectar ao servidor. A API está rodando?",
+    };
   }
 
   if (!res.ok) {
     const erro: Partial<ErroResponse> = await res.json().catch(() => ({}));
-    const retryAfter = res.status === 429 ? Number(res.headers.get("Retry-After")) : 0;
+    const retryAfter =
+      res.status === 429 ? Number(res.headers.get("Retry-After")) : 0;
     return {
       ok: false,
       erro: erro.mensagem ?? "Não foi possível completar a operação",

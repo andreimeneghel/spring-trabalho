@@ -13,7 +13,11 @@ import { Label } from "@/components/ui/label";
 function BotaoEntrar({ bloqueado }: { bloqueado: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="h-11 w-full text-base" disabled={pending || bloqueado}>
+    <Button
+      type="submit"
+      className="h-11 w-full text-base"
+      disabled={pending || bloqueado}
+    >
       {pending ? "Entrando..." : bloqueado ? "Aguarde..." : "Entrar"}
     </Button>
   );
@@ -64,7 +68,10 @@ export function LoginForm() {
       )}
 
       {segundosRestantes > 0 && (
-        <p role="status" className="rounded-md border border-border bg-superficie px-3 py-2 text-sm text-texto-suave">
+        <p
+          role="status"
+          className="rounded-md border border-border bg-superficie px-3 py-2 text-sm text-texto-suave"
+        >
           Aguarde {segundosRestantes}s para tentar novamente.
         </p>
       )}

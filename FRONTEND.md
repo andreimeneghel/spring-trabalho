@@ -109,7 +109,7 @@ export interface Usuario {
 export interface TokenResponse {
   token: string;
   tipo: "Bearer";
-  expiraEmSegundos: number;   // 86400 = 24h
+  expiraEmSegundos: number; // 86400 = 24h
   usuario: Usuario;
 }
 
@@ -118,8 +118,8 @@ export interface PlaylistResumo {
   nome: string;
   descricao: string | null;
   publica: boolean;
-  capa: string | null;        // data URI base64 (PNG/JPG) ou null
-  criadaEm: string;           // ISO: "2026-09-22T10:15:30"
+  capa: string | null; // data URI base64 (PNG/JPG) ou null
+  criadaEm: string; // ISO: "2026-09-22T10:15:30"
   donoId: number;
   donoNome: string;
   totalMusicas: number;
@@ -128,20 +128,20 @@ export interface PlaylistResumo {
 export interface MusicaDaPlaylist {
   musicaId: number;
   titulo: string;
-  duracao: number;            // segundos
+  duracao: number; // segundos
   artista: string | null;
-  ordem: number;              // comeca em 0
+  ordem: number; // comeca em 0
 }
 
 export interface PlaylistDetalhe extends Omit<PlaylistResumo, "totalMusicas"> {
   totalMusicas: number;
-  duracaoTotal: number;       // segundos
+  duracaoTotal: number; // segundos
   musicas: MusicaDaPlaylist[];
 }
 
 export interface Avaliacao {
   id: number;
-  nota: number;               // 1 a 5
+  nota: number; // 1 a 5
   comentario: string | null;
   criadaEm: string;
   atualizadaEm: string | null;
@@ -154,7 +154,7 @@ export interface Avaliacao {
 export interface MediaAvaliacao {
   musicaId: number;
   musicaTitulo: string;
-  media: number;              // 0.0 quando nao ha avaliacoes
+  media: number; // 0.0 quando nao ha avaliacoes
   totalAvaliacoes: number;
 }
 
@@ -165,7 +165,7 @@ export interface ErroResponse {
   erro: string;
   mensagem: string;
   caminho: string;
-  campos?: Record<string, string>;   // presente apenas em erro de validacao (400)
+  campos?: Record<string, string>; // presente apenas em erro de validacao (400)
 }
 ```
 
@@ -173,18 +173,18 @@ export interface ErroResponse {
 
 #### Autenticacao — publico
 
-| Metodo | Rota | Body | Resposta |
-|---|---|---|---|
-| POST | `/auth/registrar` | `{ nome, email, senha, tipo }` | `201` `TokenResponse` |
-| POST | `/auth/login` | `{ email, senha }` | `200` `TokenResponse` |
+| Metodo | Rota              | Body                           | Resposta              |
+| ------ | ----------------- | ------------------------------ | --------------------- |
+| POST   | `/auth/registrar` | `{ nome, email, senha, tipo }` | `201` `TokenResponse` |
+| POST   | `/auth/login`     | `{ email, senha }`             | `200` `TokenResponse` |
 
 Regras de validacao: `nome` ate 100 chars; `email` formato valido, ate 150; `senha` entre 6 e
 50; `tipo` e `"OUVINTE"` ou `"ARTISTA"`.
 
 > **Limite de tentativas no login.** Depois de **4 senhas erradas seguidas** para o mesmo
 > email, `/auth/login` passa a responder **`429`** por **60 segundos**. A resposta traz o
-> header `Retry-After` (segundos) e a `mensagem` ja formatada — *"Muitas tentativas de login.
-> Tente novamente em 45 segundos"*. Um login correto zera a contagem, e ficar 15 minutos sem
+> header `Retry-After` (segundos) e a `mensagem` ja formatada — _"Muitas tentativas de login.
+> Tente novamente em 45 segundos"_. Um login correto zera a contagem, e ficar 15 minutos sem
 > tentar tambem.
 >
 > **O que o front faz:** na quarta falha, o `loginAction` repassa a `mensagem` da API e o
@@ -193,29 +193,29 @@ Regras de validacao: `nome` ate 100 chars; `email` formato valido, ate 150; `sen
 
 #### Usuario — exige token
 
-| Metodo | Rota | Observacao |
-|---|---|---|
-| GET | `/usuarios` | Lista todos |
-| GET | `/usuarios/me` | **Use esta para hidratar a sessao** |
-| GET | `/usuarios/{id}` | |
-| PUT | `/usuarios/{id}` | `{ nome, email }` — so a propria conta |
-| PATCH | `/usuarios/{id}/senha` | `{ senhaAtual, novaSenha }` — so a propria conta |
-| DELETE | `/usuarios/{id}` | So a propria conta |
+| Metodo | Rota                   | Observacao                                       |
+| ------ | ---------------------- | ------------------------------------------------ |
+| GET    | `/usuarios`            | Lista todos                                      |
+| GET    | `/usuarios/me`         | **Use esta para hidratar a sessao**              |
+| GET    | `/usuarios/{id}`       |                                                  |
+| PUT    | `/usuarios/{id}`       | `{ nome, email }` — so a propria conta           |
+| PATCH  | `/usuarios/{id}/senha` | `{ senhaAtual, novaSenha }` — so a propria conta |
+| DELETE | `/usuarios/{id}`       | So a propria conta                               |
 
 #### Playlist — exige token
 
-| Metodo | Rota | Observacao |
-|---|---|---|
-| GET | `/playlists` | Publicas de todos + as suas (inclusive privadas) |
-| GET | `/playlists/minhas` | Somente as suas |
-| GET | `/playlists/usuario/{usuarioId}` | Privadas so aparecem se for voce |
-| GET | `/playlists/busca?nome=rock` | Busca **somente em playlists publicas** |
-| GET | `/playlists/{id}` | Detalhe com as musicas ordenadas |
-| POST | `/playlists` | `{ nome, descricao?, publica?, capa? }` → `201` |
-| PUT | `/playlists/{id}` | Mesmo body do POST — so o dono |
-| DELETE | `/playlists/{id}` | `204` — so o dono |
-| POST | `/playlists/{id}/musicas` | `{ musicaId }` — adiciona no fim |
-| DELETE | `/playlists/{id}/musicas/{musicaId}` | Remove e reordena |
+| Metodo | Rota                                 | Observacao                                       |
+| ------ | ------------------------------------ | ------------------------------------------------ |
+| GET    | `/playlists`                         | Publicas de todos + as suas (inclusive privadas) |
+| GET    | `/playlists/minhas`                  | Somente as suas                                  |
+| GET    | `/playlists/usuario/{usuarioId}`     | Privadas so aparecem se for voce                 |
+| GET    | `/playlists/busca?nome=rock`         | Busca **somente em playlists publicas**          |
+| GET    | `/playlists/{id}`                    | Detalhe com as musicas ordenadas                 |
+| POST   | `/playlists`                         | `{ nome, descricao?, publica?, capa? }` → `201`  |
+| PUT    | `/playlists/{id}`                    | Mesmo body do POST — so o dono                   |
+| DELETE | `/playlists/{id}`                    | `204` — so o dono                                |
+| POST   | `/playlists/{id}/musicas`            | `{ musicaId }` — adiciona no fim                 |
+| DELETE | `/playlists/{id}/musicas/{musicaId}` | Remove e reordena                                |
 
 Regras que o front precisa respeitar:
 
@@ -240,18 +240,17 @@ Regras que o front precisa respeitar:
 > Imagens base64 usam `<img>` comum, nao `next/image` — o otimizador do Next nao processa
 > data URI.
 
-
 #### Avaliacao — exige token
 
-| Metodo | Rota | Observacao |
-|---|---|---|
-| GET | `/musicas/{musicaId}/avaliacoes` | Lista da musica, mais recentes primeiro |
-| GET | `/musicas/{musicaId}/avaliacoes/media` | `{ media, totalAvaliacoes }` |
-| POST | `/musicas/{musicaId}/avaliacoes` | `{ nota, comentario? }` → `201` |
-| GET | `/avaliacoes/minhas` | Suas avaliacoes |
-| GET | `/avaliacoes/{id}` | |
-| PUT | `/avaliacoes/{id}` | Mesmo body — so o autor |
-| DELETE | `/avaliacoes/{id}` | `204` — so o autor |
+| Metodo | Rota                                   | Observacao                              |
+| ------ | -------------------------------------- | --------------------------------------- |
+| GET    | `/musicas/{musicaId}/avaliacoes`       | Lista da musica, mais recentes primeiro |
+| GET    | `/musicas/{musicaId}/avaliacoes/media` | `{ media, totalAvaliacoes }`            |
+| POST   | `/musicas/{musicaId}/avaliacoes`       | `{ nota, comentario? }` → `201`         |
+| GET    | `/avaliacoes/minhas`                   | Suas avaliacoes                         |
+| GET    | `/avaliacoes/{id}`                     |                                         |
+| PUT    | `/avaliacoes/{id}`                     | Mesmo body — so o autor                 |
+| DELETE | `/avaliacoes/{id}`                     | `204` — so o autor                      |
 
 Regras:
 
@@ -291,15 +290,15 @@ export async function parseErro(res: Response): Promise<never> {
 }
 ```
 
-| Status | Significado | O que a UI faz |
-|---|---|---|
-| 400 | Validacao ou regra de negocio | Mostra `campos` nos inputs; senao, toast com `mensagem` |
-| 401 | Token ausente/expirado | Limpa a sessao e redireciona para `/login` |
-| 403 | Sem permissao | Toast; nao deveria acontecer se a UI esconder o que nao e do usuario |
-| 404 | Nao existe | Pagina `not-found` |
-| 409 | Duplicado | Mensagem especifica (nome em uso, ja avaliou, musica ja na playlist) |
-| 429 | Muitas tentativas de login | Mostra a `mensagem` da API e uma contagem regressiva baseada em `Retry-After`; desabilita o login durante a espera |
-| 500 | Erro no servidor | Toast generico; nao exponha detalhes |
+| Status | Significado                   | O que a UI faz                                                                                                     |
+| ------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 400    | Validacao ou regra de negocio | Mostra `campos` nos inputs; senao, toast com `mensagem`                                                            |
+| 401    | Token ausente/expirado        | Limpa a sessao e redireciona para `/login`                                                                         |
+| 403    | Sem permissao                 | Toast; nao deveria acontecer se a UI esconder o que nao e do usuario                                               |
+| 404    | Nao existe                    | Pagina `not-found`                                                                                                 |
+| 409    | Duplicado                     | Mensagem especifica (nome em uso, ja avaliou, musica ja na playlist)                                               |
+| 429    | Muitas tentativas de login    | Mostra a `mensagem` da API e uma contagem regressiva baseada em `Retry-After`; desabilita o login durante a espera |
+| 500    | Erro no servidor              | Toast generico; nao exponha detalhes                                                                               |
 
 Quando vier `400` com `campos`, mapeie direto para os erros do formulario:
 
@@ -345,7 +344,7 @@ export async function criarSessao(token: string, expiraEmSegundos: number) {
   cookieStore.set(NOME_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",       // "lax" permite voltar de link externo; "strict" quebraria isso
+    sameSite: "lax", // "lax" permite voltar de link externo; "strict" quebraria isso
     path: "/",
     maxAge: expiraEmSegundos,
   });
@@ -366,7 +365,7 @@ export async function destruirSessao() {
 
 ```ts
 // src/lib/api/client.ts
-import "server-only";                 // garante que nunca vai para o bundle do cliente
+import "server-only"; // garante que nunca vai para o bundle do cliente
 import { lerToken } from "@/lib/auth/session";
 import { parseErro } from "./errors";
 
@@ -407,7 +406,10 @@ import { criarSessao } from "@/lib/auth/session";
 import { ApiError } from "@/lib/api/errors";
 import type { TokenResponse } from "@/types/api";
 
-export async function loginAction(_estadoAnterior: unknown, formData: FormData) {
+export async function loginAction(
+  _estadoAnterior: unknown,
+  formData: FormData,
+) {
   const email = String(formData.get("email") ?? "");
   const senha = String(formData.get("senha") ?? "");
 
@@ -429,7 +431,7 @@ export async function loginAction(_estadoAnterior: unknown, formData: FormData) 
     return { erro: "Nao foi possivel conectar ao servidor" };
   }
 
-  redirect("/playlists");   // fora do try: redirect lanca uma excecao de controle
+  redirect("/playlists"); // fora do try: redirect lanca uma excecao de controle
 }
 ```
 
@@ -453,7 +455,7 @@ export function middleware(request: NextRequest) {
 
   if (!token && !ehPublica) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("redirect", pathname);   // volta pra ca depois do login
+    url.searchParams.set("redirect", pathname); // volta pra ca depois do login
     return NextResponse.redirect(url);
   }
 
@@ -465,7 +467,9 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|webp)$).*)",
+  ],
 };
 ```
 
@@ -618,13 +622,24 @@ export const listarPlaylists = () =>
   apiFetch<PlaylistResumo[]>("/playlists", { next: { tags: ["playlists"] } });
 
 export const listarMinhasPlaylists = () =>
-  apiFetch<PlaylistResumo[]>("/playlists/minhas", { next: { tags: ["playlists"] } });
+  apiFetch<PlaylistResumo[]>("/playlists/minhas", {
+    next: { tags: ["playlists"] },
+  });
 
 export const buscarPlaylist = (id: number) =>
-  apiFetch<PlaylistDetalhe>(`/playlists/${id}`, { next: { tags: [`playlist-${id}`] } });
+  apiFetch<PlaylistDetalhe>(`/playlists/${id}`, {
+    next: { tags: [`playlist-${id}`] },
+  });
 
-export const criarPlaylist = (dados: { nome: string; descricao?: string; publica?: boolean }) =>
-  apiFetch<PlaylistDetalhe>("/playlists", { method: "POST", body: JSON.stringify(dados) });
+export const criarPlaylist = (dados: {
+  nome: string;
+  descricao?: string;
+  publica?: boolean;
+}) =>
+  apiFetch<PlaylistDetalhe>("/playlists", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  });
 
 export const adicionarMusica = (id: number, musicaId: number) =>
   apiFetch<PlaylistDetalhe>(`/playlists/${id}/musicas`, {
@@ -633,7 +648,9 @@ export const adicionarMusica = (id: number, musicaId: number) =>
   });
 
 export const removerMusica = (id: number, musicaId: number) =>
-  apiFetch<PlaylistDetalhe>(`/playlists/${id}/musicas/${musicaId}`, { method: "DELETE" });
+  apiFetch<PlaylistDetalhe>(`/playlists/${id}/musicas/${musicaId}`, {
+    method: "DELETE",
+  });
 ```
 
 ---
@@ -660,25 +677,25 @@ universidade presente de forma sobria, nao decorativa.
 
 :root {
   /* Marca — dois verdes da UNESC (CONFIRMAR no manual) */
-  --unesc-verde: #00913F;         /* principal */
-  --unesc-verde-claro: #8CC63F;   /* secundario, acentos */
+  --unesc-verde: #00913f; /* principal */
+  --unesc-verde-claro: #8cc63f; /* secundario, acentos */
 
   /* Superficies — escuro, como plataforma de musica */
-  --fundo: #0B0E0C;
+  --fundo: #0b0e0c;
   --superficie: #141815;
-  --superficie-alta: #1E241F;
-  --borda: #2A312C;
+  --superficie-alta: #1e241f;
+  --borda: #2a312c;
 
   /* Texto */
-  --texto: #F2F5F3;
-  --texto-suave: #A3ADA6;
-  --texto-fraco: #6B756E;
+  --texto: #f2f5f3;
+  --texto-suave: #a3ada6;
+  --texto-fraco: #6b756e;
 
   /* Semanticas */
-  --sucesso: #00913F;
-  --erro: #E5484D;
-  --aviso: #F5A524;
-  --estrela: #F5A524;
+  --sucesso: #00913f;
+  --erro: #e5484d;
+  --aviso: #f5a524;
+  --estrela: #f5a524;
 }
 
 @theme inline {
@@ -728,16 +745,16 @@ cor e espacamento — nao de peso intermediario.
 
 Erros que denunciam interface gerada sem cuidado, e o que fazer:
 
-| Evite | Faca |
-|---|---|
-| Gradiente roxo/rosa em heroi | Fundo solido escuro; verde so em acao e destaque |
-| Emoji como icone (🎵 📀) | `lucide-react`, que ja vem com o shadcn |
-| Tudo centralizado com `max-w-md` | Layout real: sidebar fixa + conteudo fluido |
-| `shadow-2xl` e bordas arredondadas gigantes | `border border-borda`, `rounded-lg` |
-| Card generico repetido pra tudo | Card de playlist ≠ item de musica ≠ card de avaliacao |
-| "Bem-vindo ao SoundHub! ✨" | "Suas playlists" · "12 musicas · 48 min" |
-| Espaco vazio com texto centralizado | Estado vazio com acao: "Crie sua primeira playlist" + botao |
-| Animacao em tudo | Transicao so em hover e abertura de modal |
+| Evite                                       | Faca                                                        |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| Gradiente roxo/rosa em heroi                | Fundo solido escuro; verde so em acao e destaque            |
+| Emoji como icone (🎵 📀)                    | `lucide-react`, que ja vem com o shadcn                     |
+| Tudo centralizado com `max-w-md`            | Layout real: sidebar fixa + conteudo fluido                 |
+| `shadow-2xl` e bordas arredondadas gigantes | `border border-borda`, `rounded-lg`                         |
+| Card generico repetido pra tudo             | Card de playlist ≠ item de musica ≠ card de avaliacao       |
+| "Bem-vindo ao SoundHub! ✨"                 | "Suas playlists" · "12 musicas · 48 min"                    |
+| Espaco vazio com texto centralizado         | Estado vazio com acao: "Crie sua primeira playlist" + botao |
+| Animacao em tudo                            | Transicao so em hover e abertura de modal                   |
 
 Referencias de layout: Spotify (sidebar, densidade), Linear (tipografia sobria), Bandcamp
 (conteudo primeiro).
@@ -759,7 +776,7 @@ npx shadcn@latest add button input textarea label card dialog \
 - Logo da UNESC no rodape da sidebar, discreto, com o texto "Projeto academico — UNESC".
 - O logo do SoundHub e o produto; o da universidade e contexto. Nao competem.
 - Pagina de login: logo do SoundHub centralizado, assinatura da UNESC embaixo em `text-xs
-  text-texto-fraco`.
+text-texto-fraco`.
 
 ### Acessibilidade (conta na nota de qualidade)
 
@@ -779,14 +796,14 @@ requisicao desnecessaria.
 
 ### Regra por tipo de dado
 
-| Dado | Estrategia | Por que |
-|---|---|---|
-| Playlists do usuario | `tags: ["playlists"]` + revalidar na mutacao | Muda quando o usuario age |
-| Detalhe da playlist | `tags: ["playlist-{id}"]` | Invalidacao cirurgica |
-| Playlists publicas (descobrir) | `revalidate: 60` | Tolera 1 min de atraso |
-| Media de avaliacoes | `revalidate: 30` | Muda conforme outros avaliam |
-| `/usuarios/me` | `cache: "no-store"` | Sessao; nunca compartilhar entre usuarios |
-| Busca com query | `cache: "no-store"` | Resultado por termo, cachear nao ajuda |
+| Dado                           | Estrategia                                   | Por que                                   |
+| ------------------------------ | -------------------------------------------- | ----------------------------------------- |
+| Playlists do usuario           | `tags: ["playlists"]` + revalidar na mutacao | Muda quando o usuario age                 |
+| Detalhe da playlist            | `tags: ["playlist-{id}"]`                    | Invalidacao cirurgica                     |
+| Playlists publicas (descobrir) | `revalidate: 60`                             | Tolera 1 min de atraso                    |
+| Media de avaliacoes            | `revalidate: 30`                             | Muda conforme outros avaliam              |
+| `/usuarios/me`                 | `cache: "no-store"`                          | Sessao; nunca compartilhar entre usuarios |
+| Busca com query                | `cache: "no-store"`                          | Resultado por termo, cachear nao ajuda    |
 
 > **Atencao — dado autenticado nunca vai para cache compartilhado.** Como toda chamada leva o
 > token do usuario, cachear `/playlists/minhas` sem tag por usuario poderia entregar a playlist
@@ -821,10 +838,13 @@ export async function criarPlaylistAction(_prev: unknown, formData: FormData) {
   }
 }
 
-export async function adicionarMusicaAction(playlistId: number, musicaId: number) {
+export async function adicionarMusicaAction(
+  playlistId: number,
+  musicaId: number,
+) {
   const atualizada = await adicionarMusica(playlistId, musicaId);
   revalidateTag(`playlist-${playlistId}`);
-  revalidateTag("playlists");          // o contador de musicas mudou na listagem
+  revalidateTag("playlists"); // o contador de musicas mudou na listagem
   return atualizada;
 }
 ```
@@ -939,7 +959,7 @@ As entidades existem no banco com esta forma (definida nas migrations):
 export interface Musica {
   id: number;
   titulo: string;
-  duracao: number;          // segundos
+  duracao: number; // segundos
   artistaId: number;
   albumId: number | null;
 }
@@ -1013,6 +1033,7 @@ Deixe a sidebar preparada para esses itens, mesmo que desabilitados no inicio.
 Conferir antes de apresentar:
 
 **Funcional**
+
 - [ ] Login e registro funcionando, com erro tratado
 - [ ] Rotas protegidas redirecionam para `/login`
 - [ ] CRUD completo de playlist
@@ -1022,6 +1043,7 @@ Conferir antes de apresentar:
 - [ ] Logout limpa a sessao
 
 **Qualidade**
+
 - [ ] `npm run build` sem erro e sem warning de TypeScript
 - [ ] Nenhum `any` no codigo
 - [ ] `loading.tsx` nas rotas com dado
@@ -1030,12 +1052,14 @@ Conferir antes de apresentar:
 - [ ] Nenhum `console.log` sobrando
 
 **Seguranca**
+
 - [ ] Token so em cookie `httpOnly`
 - [ ] `API_URL` nao exposta no bundle (confira o DevTools → Sources)
 - [ ] `.env.local` fora do git
 - [ ] 401 desloga automaticamente
 
 **Apresentacao**
+
 - [ ] README do front com print das telas e instrucoes
 - [ ] Seed de dados para a demo (usuarios, playlists e avaliacoes prontos)
 - [ ] Roteiro da demo ensaiado: registrar → criar playlist → adicionar musica → avaliar
@@ -1044,13 +1068,13 @@ Conferir antes de apresentar:
 
 ## Referencia rapida
 
-| | |
-|---|---|
-| API | `http://localhost:8080` |
-| Swagger | `http://localhost:8080/swagger-ui.html` |
-| Front | `http://localhost:3000` |
-| Cookie | `soundhub_sessao` (httpOnly) |
-| Token | JWT, 24h, header `Authorization: Bearer <token>` |
+|                 |                                                        |
+| --------------- | ------------------------------------------------------ |
+| API             | `http://localhost:8080`                                |
+| Swagger         | `http://localhost:8080/swagger-ui.html`                |
+| Front           | `http://localhost:3000`                                |
+| Cookie          | `soundhub_sessao` (httpOnly)                           |
+| Token           | JWT, 24h, header `Authorization: Bearer <token>`       |
 | Origem liberada | `http://localhost:3000` (ajustavel por `CORS_ORIGENS`) |
 
 Duvida sobre o comportamento de um endpoint: teste primeiro no Swagger. Ele mostra a resposta
