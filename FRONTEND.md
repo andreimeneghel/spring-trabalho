@@ -158,6 +158,32 @@ export interface MediaAvaliacao {
   totalAvaliacoes: number;
 }
 
+export interface ArtistaResumo {
+  id: number;
+  nomeArtistico: string;
+  biografia: string | null;
+  usuarioId: number;
+  usuarioNome: string;
+}
+
+export interface ArtistaDetalhe extends ArtistaResumo {
+  totalAlbuns: number;
+  totalMusicas: number;
+  albuns: AlbumResumo[];
+}
+
+export interface AlbumResumo {
+  id: number;
+  titulo: string;
+  anoLancamento: number | null;
+  artistaId: number;
+  artistaNome: string;
+}
+
+export interface AlbumDetalhe extends AlbumResumo {
+  totalMusicas: number;
+}
+
 /** Formato unico de erro da API. */
 export interface ErroResponse {
   timestamp: string;
@@ -258,6 +284,45 @@ Regras:
 - **Uma avaliacao por usuario por musica.** Se ja existe → `409`. A UI deve detectar isso e
   alternar para modo de edicao (`PUT`) em vez de mostrar erro cru.
 - Artista nao pode avaliar a propria musica → `400`.
+
+#### Artista e Album — exige token
+
+| Metodo | Rota                          | Observacao                                        |
+| ------ | ----------------------------- | ------------------------------------------------- |
+| GET    | `/artistas`                   | Lista todos                                       |
+| GET    | `/artistas/busca?nome=banda`  | Busca pelo nome artistico                         |
+| GET    | `/artistas/meu-perfil`        | Seu perfil de artista (`404` se nao tiver)        |
+| GET    | `/artistas/{id}`              | Detalhe com contagens e os albuns                 |
+| POST   | `/artistas`                   | `{ nomeArtistico, biografia? }` → `201`           |
+| PUT    | `/artistas/{id}`              | Mesmo body do POST                                |
+| DELETE | `/artistas/{id}`              | `204`                                             |
+| GET    | `/albuns`                     | Lista todos                                       |
+| GET    | `/albuns/busca?titulo=raizes` | Busca pelo titulo                                 |
+| GET    | `/albuns/artista/{artistaId}` | Albuns de um artista, mais recentes primeiro      |
+| GET    | `/albuns/{id}`                | Detalhe com a quantidade de musicas               |
+| POST   | `/albuns`                     | `{ titulo, anoLancamento? }` → `201`              |
+| PUT    | `/albuns/{id}`                | Mesmo body do POST                                |
+| DELETE | `/albuns/{id}`                | `204`                                             |
+
+Regras que o front precisa respeitar:
+
+- **O perfil de artista e 1:1 com o usuario.** O `POST /artistas` cria o perfil de quem
+  esta logado — o `usuarioId` nao vai no body. Tentar criar um segundo perfil → `409`.
+- `nomeArtistico` obrigatorio, ate 100 chars, **unico no sistema** (duplicado → `409`).
+- `biografia` opcional, ate 1000 chars. String vazia grava `null`.
+- **O album tambem nao recebe `artistaId` no body**: ele e vinculado ao perfil de artista
+  do usuario logado. Se o usuario ainda nao tem perfil → `400` com a mensagem pedindo
+  para criar o perfil antes.
+- `titulo` obrigatorio, ate 150 chars, **unico dentro do mesmo artista** (duplicado → `409`).
+- `anoLancamento` opcional, entre `1900` e o ano atual. Fora disso → `400`.
+- **Excluir artista com album ou musica → `400`.** Apague os albuns e as musicas antes. A
+  regra existe porque o banco apagaria tudo em cascata sem avisar.
+- Excluir um album **nao apaga as musicas** dele: elas ficam sem album (`albumId: null`).
+
+> **Para o front:** o fluxo natural e `GET /artistas/meu-perfil` ao entrar na area do
+> artista. Se voltar `404`, mostre a tela de "criar perfil de artista" em vez de erro; se
+> voltar `200`, mostre o perfil com os albuns e o botao de novo album. Use `ArtistaDetalhe`
+> — ele ja traz os albuns, sem precisar de uma segunda chamada.
 
 ### Tratamento de erros
 
@@ -948,8 +1013,11 @@ algo funcionando:
 
 ## 8. Endpoints futuros
 
-**Musica, Categoria, Artista e Album** estao em desenvolvimento. Como Playlist e Avaliacao
-dependem de Musica, o front precisa de uma estrategia para nao ficar bloqueado.
+**Musica e Categoria** estao em desenvolvimento. Como Playlist e Avaliacao dependem de
+Musica, o front precisa de uma estrategia para nao ficar bloqueado.
+
+> **Artista e Album ja estao prontos** — os endpoints e os tipos estao na secao 2. Esta
+> secao trata apenas do que ainda falta.
 
 ### O que ja da para saber
 
@@ -968,25 +1036,11 @@ export interface Categoria {
   id: number;
   nome: string;
 }
-
-export interface Artista {
-  id: number;
-  nomeArtistico: string;
-  biografia: string | null;
-  usuarioId: number;
-}
-
-export interface Album {
-  id: number;
-  titulo: string;
-  anoLancamento: number | null;
-  artistaId: number;
-}
 ```
 
 Os endpoints provavelmente seguirao o mesmo padrao REST do resto da API (`GET /musicas`,
-`GET /musicas/{id}`, `POST /musicas` restrito a ARTISTA, etc.), mas **confirme com o Douglas e
-o Gustavo** antes de integrar.
+`GET /musicas/{id}`, `POST /musicas` restrito a ARTISTA, etc.), mas **confirme com o Douglas**
+antes de integrar.
 
 ### Como trabalhar sem eles
 
@@ -1021,7 +1075,7 @@ hoje. Quando a API ficar pronta, remove a variavel — nenhum componente muda.
 
 - `/musicas` — catalogo com filtro por categoria
 - `/musicas/[id]` — detalhe, media de avaliacoes, botao "adicionar a playlist"
-- `/artistas/[id]` — perfil com albuns e musicas
+- `/artistas/[id]` — perfil com albuns e musicas (a API ja esta pronta, ver secao 2)
 - Area do artista (so `tipo === "ARTISTA"`) para cadastrar album e musica
 
 Deixe a sidebar preparada para esses itens, mesmo que desabilitados no inicio.
