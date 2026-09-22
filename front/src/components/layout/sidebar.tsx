@@ -79,7 +79,7 @@ export function Sidebar() {
         <p className="text-center text-xs leading-relaxed text-texto-fraco">
           
           <br />
-          &copy; 2024 SoundHub
+          &copy; 2026 SoundHub
         </p>
       )}
 
