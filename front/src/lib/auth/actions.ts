@@ -10,6 +10,7 @@ const API_URL = process.env.API_URL ?? "http://localhost:8080";
 export interface EstadoFormulario {
   erro?: string;
   campos?: Record<string, string>;
+  segundosRestantes?: number;
 }
 
 /** Chama /auth/* sem passar pelo apiFetch, porque aqui ainda nao existe token. */
@@ -32,10 +33,12 @@ async function autenticar(
 
   if (!res.ok) {
     const erro: Partial<ErroResponse> = await res.json().catch(() => ({}));
+    const retryAfter = res.status === 429 ? Number(res.headers.get("Retry-After")) : 0;
     return {
       ok: false,
       erro: erro.mensagem ?? "Não foi possível completar a operação",
       campos: erro.campos,
+      segundosRestantes: retryAfter > 0 ? retryAfter : undefined,
     };
   }
 
@@ -65,7 +68,11 @@ export async function loginAction(
   const resultado = await autenticar("/auth/login", validado.data);
 
   if (!resultado.ok) {
-    return { erro: resultado.erro, campos: resultado.campos };
+    return {
+      erro: resultado.erro,
+      campos: resultado.campos,
+      segundosRestantes: resultado.segundosRestantes,
+    };
   }
 
   await criarSessao(resultado.dados.token, resultado.dados.expiraEmSegundos);

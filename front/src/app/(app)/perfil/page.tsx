@@ -44,31 +44,37 @@ export default async function PerfilPage() {
         descricao="Seus dados de conta e foto."
       />
 
-      <div className="max-w-xl space-y-4">
-        <Secao titulo="Foto">
-          <FotoPerfil usuario={usuario} />
-        </Secao>
+      {/*
+        Duas colunas no desktop para a pagina nao ficar so na metade esquerda.
+        Abaixo de xl vira uma coluna so, na ordem natural de leitura.
+      */}
+      <div className="grid max-w-5xl gap-4 xl:grid-cols-2 xl:items-start">
+        <div className="space-y-4">
+          <Secao titulo="Foto">
+            <FotoPerfil usuario={usuario} />
+          </Secao>
 
-        <Secao
-          titulo="Dados da conta"
-          descricao="Como você aparece para os outros usuários."
-        >
-          <div className="mb-5 flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1">
-              {ehArtista ? (
-                <Mic2 className="size-3" />
-              ) : (
-                <Headphones className="size-3" />
-              )}
-              {ehArtista ? "Artista" : "Ouvinte"}
-            </Badge>
-            <span className="text-xs text-texto-fraco">
-              O tipo de conta e definido no cadastro e nao pode ser alterado
-            </span>
-          </div>
+          <Secao
+            titulo="Dados da conta"
+            descricao="Como você aparece para os outros usuários."
+          >
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="gap-1">
+                {ehArtista ? (
+                  <Mic2 className="size-3" />
+                ) : (
+                  <Headphones className="size-3" />
+                )}
+                {ehArtista ? "Artista" : "Ouvinte"}
+              </Badge>
+              <span className="text-xs text-texto-fraco">
+                O tipo de conta é definido no cadastro e não pode ser alterado
+              </span>
+            </div>
 
-          <DadosForm usuario={usuario} />
-        </Secao>
+            <DadosForm usuario={usuario} />
+          </Secao>
+        </div>
 
         <Secao
           titulo="Senha"

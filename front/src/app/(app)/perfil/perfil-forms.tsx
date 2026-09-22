@@ -45,7 +45,7 @@ export function DadosForm({ usuario }: { usuario: Usuario }) {
   }, [estado.ok]);
 
   return (
-    <form action={formAction} className="max-w-md space-y-5" noValidate>
+    <form action={formAction} className="space-y-5" noValidate>
       {estado.erro && <Alerta mensagem={estado.erro} />}
 
       <div className="space-y-2">
@@ -95,7 +95,7 @@ export function SenhaForm({ usuarioId }: { usuarioId: number }) {
   }, [estado.ok]);
 
   return (
-    <form ref={formRef} action={formAction} className="max-w-md space-y-5" noValidate>
+    <form ref={formRef} action={formAction} className="space-y-5" noValidate>
       {estado.erro && <Alerta mensagem={estado.erro} />}
 
       <div className="space-y-2">

@@ -50,6 +50,23 @@ public class GlobalExceptionHandler {
         return erro(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
     }
 
+    /**
+     * 429 com o header Retry-After, para o cliente saber quanto esperar.
+     * Fica antes dos handlers de autenticacao porque e mais especifico.
+     */
+    @ExceptionHandler(MuitasTentativasException.class)
+    public ResponseEntity<ErroResponseDTO> muitasTentativas(MuitasTentativasException ex,
+                                                            HttpServletRequest req) {
+        log.warn("Bloqueio por excesso de tentativas em {}", req.getRequestURI());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getSegundosRestantes()))
+                .body(ErroResponseDTO.of(
+                        HttpStatus.TOO_MANY_REQUESTS.value(),
+                        HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                        ex.getMessage(),
+                        req.getRequestURI()));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErroResponseDTO> credenciais(BadCredentialsException ex, HttpServletRequest req) {
         return erro(HttpStatus.UNAUTHORIZED, "Email ou senha invalidos", req);

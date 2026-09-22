@@ -77,9 +77,9 @@ export function Sidebar() {
 
       {!recolhida && (
         <p className="text-center text-xs leading-relaxed text-texto-fraco">
-          Projeto acadêmico
+          
           <br />
-          UNESC
+          &copy; 2024 SoundHub
         </p>
       )}
 

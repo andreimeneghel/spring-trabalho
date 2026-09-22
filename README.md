@@ -109,7 +109,7 @@ npm install
 npm run dev
 ```
 
-O front sobe em `http://localhost:3000`.
+O front sobe em `http://localhost:3001`.
 
 > Enquanto os endpoints de Musica nao existirem, deixe `MOCK_MUSICAS=true` no `.env.local`: a
 > tela de adicionar musica usa um catalogo de exemplo. Troque para `false` quando a parte do
@@ -172,7 +172,9 @@ java/src/main/resources/
 └── db/migration/                # migrations do Flyway
     ├── V1__create_usuario.sql
     ├── V2__create_artista_album_musica_categoria.sql
-    └── V3__create_playlist_avaliacao.sql
+    ├── V3__create_playlist_avaliacao.sql
+    ├── V4__add_foto_usuario.sql
+    └── V5__add_capa_playlist.sql
 ```
 
 Duas observacoes sobre a estrutura:
@@ -518,6 +520,7 @@ Todo erro da API volta no mesmo formato, montado pelo `GlobalExceptionHandler`
 | 403 | Tentou alterar algo de outro usuario, ou abrir playlist privada alheia |
 | 404 | Id inexistente |
 | 409 | Dado duplicado (email, nome de playlist, avaliacao repetida) |
+| 429 | Muitas tentativas de login seguidas |
 | 500 | Erro inesperado |
 
 ---
@@ -542,6 +545,11 @@ Sugestao para testar os dois perfis:
 | Banco | soundhub |
 | Usuario | postgres |
 | Senha | 123 |
+
+**Limite de tentativas no login:** apos 3 senhas erradas seguidas para o mesmo email, novas
+tentativas voltam `429` por 60 segundos. Protege contra forca bruta. Um login correto zera a
+contagem. O controle e feito em memoria (`TentativaLoginService`) — numa aplicacao com varias
+instancias isso precisaria ir para Redis.
 
 As senhas dos usuarios sao gravadas com hash BCrypt — nunca em texto puro. A chave do JWT e as
 credenciais do banco podem ser trocadas pelas variaveis de ambiente `JWT_SECRET`, `DB_URL`,

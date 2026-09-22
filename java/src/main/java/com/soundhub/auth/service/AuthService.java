@@ -6,6 +6,7 @@ import com.soundhub.auth.dto.TokenResponseDTO;
 import com.soundhub.usuario.dto.UsuarioResponseDTO;
 import com.soundhub.usuario.entity.Usuario;
 import com.soundhub.common.exception.ConflitoException;
+import com.soundhub.common.exception.MuitasTentativasException;
 import com.soundhub.common.util.EmailUtils;
 import com.soundhub.usuario.repository.UsuarioRepository;
 import com.soundhub.common.security.JwtService;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final TentativaLoginService tentativaLoginService;
 
     @Transactional
     public TokenResponseDTO registrar(RegistroRequestDTO dto) {
@@ -50,9 +53,25 @@ public class AuthService {
     }
 
     public TokenResponseDTO login(LoginRequestDTO dto) {
-        // lanca BadCredentialsException (-> 401) se email ou senha estiverem errados
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(EmailUtils.normalizar(dto.email()), dto.senha()));
+        String email = EmailUtils.normalizar(dto.email());
+
+        // 429 se o email estourou o limite de tentativas
+        tentativaLoginService.validarPodeTentar(email);
+
+        Authentication auth;
+        try {
+            // lanca BadCredentialsException (-> 401) se email ou senha estiverem errados
+            auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, dto.senha()));
+        } catch (AuthenticationException ex) {
+            long segundosBloqueio = tentativaLoginService.registrarFalha(email);
+            if (segundosBloqueio > 0) {
+                throw new MuitasTentativasException(segundosBloqueio);
+            }
+            throw ex;
+        }
+
+        tentativaLoginService.registrarSucesso(email);
 
         Usuario usuario = (Usuario) auth.getPrincipal();
         log.info("Login realizado: id={}", usuario.getId());

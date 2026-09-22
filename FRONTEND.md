@@ -181,6 +181,16 @@ export interface ErroResponse {
 Regras de validacao: `nome` ate 100 chars; `email` formato valido, ate 150; `senha` entre 6 e
 50; `tipo` e `"OUVINTE"` ou `"ARTISTA"`.
 
+> **Limite de tentativas no login.** Depois de **4 senhas erradas seguidas** para o mesmo
+> email, `/auth/login` passa a responder **`429`** por **60 segundos**. A resposta traz o
+> header `Retry-After` (segundos) e a `mensagem` ja formatada — *"Muitas tentativas de login.
+> Tente novamente em 45 segundos"*. Um login correto zera a contagem, e ficar 15 minutos sem
+> tentar tambem.
+>
+> **O que o front faz:** na quarta falha, o `loginAction` repassa a `mensagem` da API e o
+> header `Retry-After`. O formulário mostra a mensagem para aguardar, exibe a contagem
+> regressiva e desabilita o botão até os 60 segundos terminarem.
+
 #### Usuario — exige token
 
 | Metodo | Rota | Observacao |
@@ -288,6 +298,7 @@ export async function parseErro(res: Response): Promise<never> {
 | 403 | Sem permissao | Toast; nao deveria acontecer se a UI esconder o que nao e do usuario |
 | 404 | Nao existe | Pagina `not-found` |
 | 409 | Duplicado | Mensagem especifica (nome em uso, ja avaliou, musica ja na playlist) |
+| 429 | Muitas tentativas de login | Mostra a `mensagem` da API e uma contagem regressiva baseada em `Retry-After`; desabilita o login durante a espera |
 | 500 | Erro no servidor | Toast generico; nao exponha detalhes |
 
 Quando vier `400` com `campos`, mapeie direto para os erros do formulario:

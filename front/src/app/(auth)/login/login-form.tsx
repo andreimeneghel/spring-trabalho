@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function BotaoEntrar() {
+function BotaoEntrar({ bloqueado }: { bloqueado: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="h-11 w-full text-base" disabled={pending}>
-      {pending ? "Entrando..." : "Entrar"}
+    <Button type="submit" className="h-11 w-full text-base" disabled={pending || bloqueado}>
+      {pending ? "Entrando..." : bloqueado ? "Aguarde..." : "Entrar"}
     </Button>
   );
 }
@@ -28,6 +28,20 @@ export function LoginForm() {
     loginAction,
     {},
   );
+  const [segundosRestantes, setSegundosRestantes] = useState(0);
+
+  useEffect(() => {
+    if (!estado.segundosRestantes) {
+      return;
+    }
+
+    setSegundosRestantes(estado.segundosRestantes);
+    const intervalo = window.setInterval(() => {
+      setSegundosRestantes((atual) => Math.max(0, atual - 1));
+    }, 1000);
+
+    return () => window.clearInterval(intervalo);
+  }, [estado.segundosRestantes]);
 
   return (
     <form action={formAction} className="space-y-5" noValidate>
@@ -46,6 +60,12 @@ export function LoginForm() {
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           {estado.erro}
+        </p>
+      )}
+
+      {segundosRestantes > 0 && (
+        <p role="status" className="rounded-md border border-border bg-superficie px-3 py-2 text-sm text-texto-suave">
+          Aguarde {segundosRestantes}s para tentar novamente.
         </p>
       )}
 
@@ -85,7 +105,7 @@ export function LoginForm() {
         )}
       </div>
 
-      <BotaoEntrar />
+      <BotaoEntrar bloqueado={segundosRestantes > 0} />
     </form>
   );
 }
