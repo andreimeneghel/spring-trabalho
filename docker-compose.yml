@@ -6,8 +6,10 @@ services:
       POSTGRES_DB: soundhub
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "123"
+    # 5437 no host para nao brigar com um PostgreSQL ja instalado na 5432.
+    # Dentro do container a porta continua sendo a 5432.
     ports:
-      - "5432:5432"
+      - "5437:5432"
     volumes:
       - soundhub-data:/var/lib/postgresql/data
 

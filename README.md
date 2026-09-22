@@ -4,7 +4,13 @@ Plataforma de streaming de musica inspirada no Spotify, feita como Trabalho 1 da
 Desenvolvimento Backend com Spring Boot. Artistas publicam musicas e albuns; ouvintes escutam,
 montam playlists e avaliam musicas.
 
-API REST com Spring Boot 3, autenticacao via JWT, PostgreSQL e migrations com Flyway.
+Monorepositorio com duas aplicacoes:
+
+```
+spring-trabalho/
+├── java/     API REST — Spring Boot 3, JWT, PostgreSQL, Flyway
+└── front/    Interface web — Next.js 16, TypeScript, Tailwind, shadcn/ui
+```
 
 ---
 
@@ -21,6 +27,8 @@ API REST com Spring Boot 3, autenticacao via JWT, PostgreSQL e migrations com Fl
 
 ## Tecnologias
 
+**Backend (`java/`)**
+
 - Java 25
 - Spring Boot 3.5.6 (Web, Data JPA, Security, Validation)
 - PostgreSQL 16 + Flyway
@@ -29,14 +37,24 @@ API REST com Spring Boot 3, autenticacao via JWT, PostgreSQL e migrations com Fl
 - Swagger / OpenAPI (springdoc)
 - H2 em memoria (somente nos testes)
 
+**Frontend (`front/`)**
+
+- Next.js 16 (App Router) + React 19
+- TypeScript
+- Tailwind CSS 4 + shadcn/ui
+- Zod (validacao espelhando a do backend)
+
 ---
 
 ## Como rodar
 
+Sao tres passos: banco, API e front. A API precisa estar no ar antes do front.
+
 ### 1. Pre-requisitos
 
 - JDK 25
-- Docker (para subir o Postgres) ou um PostgreSQL local na porta 5432
+- Node.js 20 ou superior
+- Docker (para subir o Postgres) ou um PostgreSQL ja instalado na maquina
 
 ### 2. Subir o banco
 
@@ -44,43 +62,67 @@ API REST com Spring Boot 3, autenticacao via JWT, PostgreSQL e migrations com Fl
 docker compose up -d
 ```
 
-Isso cria o banco `soundhub` (usuario `postgres`, senha `123`) na porta 5432.
+Isso cria o banco `soundhub` (usuario `postgres`, senha `123`) na **porta 5437**.
 
-Se preferir usar um Postgres que ja esta instalado, crie o banco manualmente e ajuste as
-variaveis de ambiente:
+> **Por que 5437 e nao 5432?** Muita gente ja tem um PostgreSQL instalado direto no Windows,
+> ocupando a 5432 — e ai o container nao sobe. Usando a 5437 os dois convivem sem conflito. O
+> container continua usando a 5432 internamente; quem muda e so a porta do host.
+
+Se preferir usar um Postgres que ja esta instalado em vez do Docker, crie o banco `soundhub`
+manualmente e ajuste as variaveis de ambiente:
 
 ```bash
-export DB_URL=jdbc:postgresql://localhost:5432/soundhub
+export DB_URL=jdbc:postgresql://localhost:5432/soundhub   # a porta do SEU Postgres
 export DB_USER=postgres
 export DB_PASSWORD=suasenha
 ```
 
-### 3. Rodar a aplicacao
+### 3. Rodar a API
 
 ```bash
+cd java
 ./mvnw spring-boot:run
 ```
 
 No Windows (PowerShell/CMD):
 
 ```
+cd java
 mvnw.cmd spring-boot:run
 ```
 
-A aplicacao sobe em `http://localhost:8080`. O Flyway cria e versiona as tabelas sozinho na
-primeira execucao — nao e preciso rodar nenhum SQL na mao.
+A API sobe em `http://localhost:8080`. O Flyway cria e versiona as tabelas sozinho na primeira
+execucao — nao e preciso rodar nenhum SQL na mao.
 
-### 4. Rodar os testes
+### 4. Rodar o front
+
+Em outro terminal:
 
 ```bash
+cd front
+cp .env.example .env.local    # no Windows: copy .env.example .env.local
+npm install
+npm run dev
+```
+
+O front sobe em `http://localhost:3000`.
+
+> Enquanto os endpoints de Musica nao existirem, deixe `MOCK_MUSICAS=true` no `.env.local`: a
+> tela de adicionar musica usa um catalogo de exemplo. Troque para `false` quando a parte do
+> Douglas estiver pronta.
+
+### 5. Rodar os testes
+
+```bash
+cd java
 ./mvnw test
 ```
 
 Os testes usam H2 em memoria, entao rodam sem precisar do Docker nem do Postgres.
 
-### 5. Swagger
+### 6. Swagger
 
-Com a aplicacao no ar: **http://localhost:8080/swagger-ui.html**
+Com a API no ar: **http://localhost:8080/swagger-ui.html**
 
 Para testar as rotas protegidas: faca login, copie o `token` da resposta, clique em
 **Authorize** no topo da pagina e cole o token (sem escrever `Bearer `).
@@ -89,22 +131,24 @@ Para testar as rotas protegidas: faca login, copie o `token` da resposta, clique
 
 ## Estrutura de pastas
 
-O projeto e organizado **por modulo** (package-by-feature): cada entidade principal tem a sua
-pasta, e dentro dela ficam as camadas. As camadas continuam separadas — Controller, Service,
-Repository, Entity e DTO — so que agrupadas por assunto em vez de espalhadas pelo projeto.
+### Backend — `java/`
 
-```
-src/main/java/com/soundhub/
+Organizado **por modulo** (package-by-feature): cada entidade principal tem a sua pasta, e
+dentro dela ficam as camadas. As camadas continuam separadas — Controller, Service, Repository,
+Entity e DTO — so que agrupadas por assunto em vez de espalhadas pelo projeto.
+
+```text
+java/src/main/java/com/soundhub/
 ├── auth/                        # login e cadastro (Andrei)
 │   ├── controller/AuthController.java
 │   ├── service/AuthService.java
-│   └── dto/                     # nao tem entity nem repository: ver nota abaixo
+│   └── dto/
 ├── usuario/                     # CRUD de usuario (Andrei)
-│   ├── controller/  service/  repository/  entity/  dto/
+│   └── controller/  service/  repository/  entity/  dto/
 ├── artista/                     # Artista e Album (Gustavo)
 │   └── entity/
 ├── musica/                      # Musica e Categoria (Douglas)
-│   ├── repository/  entity/
+│   └── repository/  entity/
 ├── playlist/                    # Playlist (Luiz Fellipe)
 │   ├── controller/PlaylistController.java
 │   ├── service/PlaylistService.java
@@ -112,12 +156,20 @@ src/main/java/com/soundhub/
 │   ├── entity/Playlist.java, PlaylistMusica.java
 │   └── dto/
 ├── avaliacao/                   # Avaliacao (Luiz Fellipe)
-│   ├── controller/  service/  repository/  entity/  dto/
+│   └── controller/  service/  repository/  entity/  dto/
 └── common/                      # compartilhado por todos os modulos
     ├── config/                  # SecurityConfig, OpenApiConfig
     ├── exception/               # GlobalExceptionHandler e as excecoes
     ├── security/                # filtro JWT, JwtService, UserDetailsService
     └── util/
+
+java/src/main/resources/
+├── application.yml
+└── db/migration/                # migrations do Flyway
+    ├── V1__create_usuario.sql
+    ├── V2__create_artista_album_musica_categoria.sql
+    └── V3__create_playlist_avaliacao.sql
+```
 
 Duas observacoes sobre a estrutura:
 
@@ -129,13 +181,40 @@ Duas observacoes sobre a estrutura:
   foram criadas na versao minima porque Playlist e Avaliacao dependem delas para compilar; o
   CRUD completo fica com o Douglas e o Gustavo, e as pastas ja estao reservadas.
 
-src/main/resources/
-├── application.yml
-└── db/migration/                # migrations do Flyway
-    ├── V1__create_usuario.sql
-    ├── V2__create_artista_album_musica_categoria.sql
-    └── V3__create_playlist_avaliacao.sql
+### Frontend — `front/`
+
+```text
+front/src/
+├── app/
+│   ├── (auth)/                  # login e registro (sem sidebar)
+│   │   ├── login/
+│   │   └── registrar/
+│   ├── (app)/                   # area logada (com sidebar)
+│   │   ├── playlists/           # listagem, nova, [id], [id]/editar
+│   │   ├── descobrir/           # busca de playlists publicas
+│   │   ├── avaliacoes/          # minhas avaliacoes
+│   │   └── perfil/
+│   ├── layout.tsx
+│   ├── globals.css              # tokens de cor (verde UNESC) e tema escuro
+│   ├── not-found.tsx
+│   └── error.tsx
+├── components/
+│   ├── ui/                      # shadcn/ui
+│   ├── layout/                  # sidebar, menu do usuario
+│   ├── playlist/                # card, form, lista de musicas, dialogs
+│   ├── avaliacao/               # estrelas, card de avaliacao
+│   └── comum/                   # logo, estado vazio, cabecalho
+├── lib/
+│   ├── api/                     # client, errors, guard + um modulo por dominio
+│   ├── auth/                    # sessao (cookie httpOnly) e server actions
+│   ├── schemas/                 # zod, espelhando a validacao do backend
+│   └── utils/                   # formatacao de duracao, data, contagens
+├── types/api.ts                 # espelho dos DTOs do backend
+└── proxy.ts                     # protege as rotas (era middleware.ts)
 ```
+
+O detalhamento do front — contrato da API, decisoes de cache, identidade visual e checklist —
+esta em [FRONTEND.md](FRONTEND.md).
 
 ---
 
@@ -247,7 +326,7 @@ Content-Type: application/json
 {
   "token": "eyJhbGciOiJIUzI1NiJ9...",
   "tipo": "Bearer",
-  "expiraEmMs": 86400000,
+  "expiraEmSegundos": 86400,
   "usuario": {
     "id": 1,
     "nome": "Luiz Fellipe",
@@ -455,7 +534,7 @@ Sugestao para testar os dois perfis:
 
 | | |
 |---|---|
-| Host | localhost:5432 |
+| Host | localhost:5437 |
 | Banco | soundhub |
 | Usuario | postgres |
 | Senha | 123 |
@@ -463,6 +542,11 @@ Sugestao para testar os dois perfis:
 As senhas dos usuarios sao gravadas com hash BCrypt — nunca em texto puro. A chave do JWT e as
 credenciais do banco podem ser trocadas pelas variaveis de ambiente `JWT_SECRET`, `DB_URL`,
 `DB_USER` e `DB_PASSWORD`.
+
+**Como o front guarda a sessao:** o token JWT fica num cookie `httpOnly` chamado
+`soundhub_sessao`. O JavaScript da pagina nunca enxerga esse token — quem conversa com a API e
+o servidor do Next, que repassa as chamadas com o header `Authorization`. Isso evita que um XSS
+consiga roubar a sessao, o que aconteceria se o token ficasse no `localStorage`.
 
 ---
 

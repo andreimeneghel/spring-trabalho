@@ -1,6 +1,30 @@
+# ===== Java / Maven =====
 target/
-.idea/
 *.iml
+# o maven-wrapper.jar fica versionado de proposito: sem ele o ./mvnw nao roda
+
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# ===== Variaveis de ambiente (nunca commitar) =====
+.env
+.env.local
+.env*.local
+
+# ===== IDEs =====
+.idea/
 .vscode/
-*.log
+
+# ===== Sistema operacional =====
 .DS_Store
+Thumbs.db
+
+# ===== Logs =====
+*.log
+npm-debug.log*
+yarn-error.log*
