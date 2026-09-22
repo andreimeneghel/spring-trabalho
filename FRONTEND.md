@@ -287,25 +287,30 @@ Regras:
 
 #### Artista e Album — exige token
 
-| Metodo | Rota                          | Observacao                                        |
-| ------ | ----------------------------- | ------------------------------------------------- |
-| GET    | `/artistas`                   | Lista todos                                       |
-| GET    | `/artistas/busca?nome=banda`  | Busca pelo nome artistico                         |
-| GET    | `/artistas/meu-perfil`        | Seu perfil de artista (`404` se nao tiver)        |
-| GET    | `/artistas/{id}`              | Detalhe com contagens e os albuns                 |
-| POST   | `/artistas`                   | `{ nomeArtistico, biografia? }` → `201`           |
-| PUT    | `/artistas/{id}`              | Mesmo body do POST                                |
-| DELETE | `/artistas/{id}`              | `204`                                             |
-| GET    | `/albuns`                     | Lista todos                                       |
-| GET    | `/albuns/busca?titulo=raizes` | Busca pelo titulo                                 |
-| GET    | `/albuns/artista/{artistaId}` | Albuns de um artista, mais recentes primeiro      |
-| GET    | `/albuns/{id}`                | Detalhe com a quantidade de musicas               |
-| POST   | `/albuns`                     | `{ titulo, anoLancamento? }` → `201`              |
-| PUT    | `/albuns/{id}`                | Mesmo body do POST                                |
-| DELETE | `/albuns/{id}`                | `204`                                             |
+| Metodo | Rota                          | Observacao                                             |
+| ------ | ----------------------------- | ------------------------------------------------------ |
+| GET    | `/artistas`                   | Lista todos — qualquer logado                          |
+| GET    | `/artistas/busca?nome=banda`  | Busca pelo nome artistico                              |
+| GET    | `/artistas/meu-perfil`        | Seu perfil de artista (`404` se nao tiver)             |
+| GET    | `/artistas/{id}`              | Detalhe com contagens e os albuns                      |
+| POST   | `/artistas`                   | `{ nomeArtistico, biografia? }` → `201` — so ARTISTA   |
+| PUT    | `/artistas/{id}`              | Mesmo body do POST — so ARTISTA e so o dono            |
+| DELETE | `/artistas/{id}`              | `204` — so ARTISTA e so o dono                         |
+| GET    | `/albuns`                     | Lista todos — qualquer logado                          |
+| GET    | `/albuns/busca?titulo=raizes` | Busca pelo titulo                                      |
+| GET    | `/albuns/artista/{artistaId}` | Albuns de um artista, mais recentes primeiro           |
+| GET    | `/albuns/{id}`                | Detalhe com a quantidade de musicas                    |
+| POST   | `/albuns`                     | `{ titulo, anoLancamento? }` → `201` — so ARTISTA      |
+| PUT    | `/albuns/{id}`                | Mesmo body do POST — so ARTISTA e so o dono            |
+| DELETE | `/albuns/{id}`                | `204` — so ARTISTA e so o dono                         |
 
 Regras que o front precisa respeitar:
 
+- **Escrita so para usuario `tipo: "ARTISTA"`.** Ouvinte que tentar `POST`, `PUT` ou
+  `DELETE` nessas rotas leva `403`. Esconda os botoes de cadastro quando
+  `usuario.tipo !== "ARTISTA"` — mas trate o `403` mesmo assim.
+- **Alterar e excluir: so o dono.** Mexer no perfil de artista de outra pessoa, ou num
+  album que nao e seu, volta `403`.
 - **O perfil de artista e 1:1 com o usuario.** O `POST /artistas` cria o perfil de quem
   esta logado — o `usuarioId` nao vai no body. Tentar criar um segundo perfil → `409`.
 - `nomeArtistico` obrigatorio, ate 100 chars, **unico no sistema** (duplicado → `409`).

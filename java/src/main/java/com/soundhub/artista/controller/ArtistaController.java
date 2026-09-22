@@ -9,6 +9,7 @@ import com.soundhub.usuario.entity.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -16,7 +17,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
-/** Perfis de artista. Qualquer usuario logado pode consultar. */
+/**
+ * Perfis de artista.
+ *
+ * Consulta: qualquer usuario logado. Escrita: somente usuarios do tipo ARTISTA,
+ * e ainda assim so no proprio perfil (a checagem de dono fica no service).
+ */
 @RestController
 @RequestMapping("/artistas")
 @RequiredArgsConstructor
@@ -44,6 +50,7 @@ public class ArtistaController {
         return ResponseEntity.ok(artistaService.buscarPorId(id));
     }
 
+    @PreAuthorize("hasRole('ARTISTA')")
     @PostMapping
     public ResponseEntity<ArtistaDetalheDTO> criar(@RequestBody @Valid ArtistaRequestDTO dto,
                                                    @AuthenticationPrincipal Usuario logado,
@@ -53,15 +60,19 @@ public class ArtistaController {
         return ResponseEntity.created(uri).body(criado);
     }
 
+    @PreAuthorize("hasRole('ARTISTA')")
     @PutMapping("/{id}")
     public ResponseEntity<ArtistaDetalheDTO> atualizar(@PathVariable Long id,
-                                                       @RequestBody @Valid ArtistaRequestDTO dto) {
-        return ResponseEntity.ok(artistaService.atualizar(id, dto));
+                                                       @RequestBody @Valid ArtistaRequestDTO dto,
+                                                       @AuthenticationPrincipal Usuario logado) {
+        return ResponseEntity.ok(artistaService.atualizar(id, dto, logado));
     }
 
+    @PreAuthorize("hasRole('ARTISTA')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        artistaService.excluir(id);
+    public ResponseEntity<Void> excluir(@PathVariable Long id,
+                                        @AuthenticationPrincipal Usuario logado) {
+        artistaService.excluir(id, logado);
         return ResponseEntity.noContent().build();
     }
 }

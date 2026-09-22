@@ -9,6 +9,7 @@ import com.soundhub.usuario.entity.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -16,7 +17,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
-/** Albuns. O album criado fica sempre no perfil de artista de quem esta logado. */
+/**
+ * Albuns.
+ *
+ * Consulta: qualquer usuario logado. Escrita: somente ARTISTA, e o album criado
+ * fica sempre no perfil de artista de quem esta logado.
+ */
 @RestController
 @RequestMapping("/albuns")
 @RequiredArgsConstructor
@@ -44,6 +50,7 @@ public class AlbumController {
         return ResponseEntity.ok(albumService.buscarPorId(id));
     }
 
+    @PreAuthorize("hasRole('ARTISTA')")
     @PostMapping
     public ResponseEntity<AlbumDetalheDTO> criar(@RequestBody @Valid AlbumRequestDTO dto,
                                                  @AuthenticationPrincipal Usuario logado,
@@ -53,15 +60,19 @@ public class AlbumController {
         return ResponseEntity.created(uri).body(criado);
     }
 
+    @PreAuthorize("hasRole('ARTISTA')")
     @PutMapping("/{id}")
     public ResponseEntity<AlbumDetalheDTO> atualizar(@PathVariable Long id,
-                                                     @RequestBody @Valid AlbumRequestDTO dto) {
-        return ResponseEntity.ok(albumService.atualizar(id, dto));
+                                                     @RequestBody @Valid AlbumRequestDTO dto,
+                                                     @AuthenticationPrincipal Usuario logado) {
+        return ResponseEntity.ok(albumService.atualizar(id, dto, logado));
     }
 
+    @PreAuthorize("hasRole('ARTISTA')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        albumService.excluir(id);
+    public ResponseEntity<Void> excluir(@PathVariable Long id,
+                                        @AuthenticationPrincipal Usuario logado) {
+        albumService.excluir(id, logado);
         return ResponseEntity.noContent().build();
     }
 }

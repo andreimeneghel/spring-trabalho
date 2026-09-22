@@ -14,6 +14,7 @@ import com.soundhub.common.exception.RegraNegocioException;
 import com.soundhub.usuario.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,8 +93,9 @@ public class AlbumService {
     }
 
     @Transactional
-    public AlbumDetalheDTO atualizar(Long id, AlbumRequestDTO dto) {
+    public AlbumDetalheDTO atualizar(Long id, AlbumRequestDTO dto, Usuario logado) {
         Album album = buscarEntidade(id);
+        validarDono(album, logado);
         validarAno(dto.anoLancamento());
 
         String titulo = dto.titulo().trim();
@@ -114,8 +116,9 @@ public class AlbumService {
      * entao elas continuam existindo, apenas sem album (V2).
      */
     @Transactional
-    public void excluir(Long id) {
+    public void excluir(Long id, Usuario logado) {
         Album album = buscarEntidade(id);
+        validarDono(album, logado);
         albumRepository.delete(album);
         log.info("Album excluido: id={}", id);
     }
@@ -125,6 +128,13 @@ public class AlbumService {
     private Album buscarEntidade(Long id) {
         return albumRepository.findByIdComArtista(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Album", id));
+    }
+
+    /** Alterar ou excluir um album e so para o artista dono dele. */
+    private void validarDono(Album album, Usuario logado) {
+        if (!album.getArtista().getUsuario().getId().equals(logado.getId())) {
+            throw new AccessDeniedException("Este album pertence a outro artista");
+        }
     }
 
     /** Todo album pertence ao perfil de artista de quem esta logado. */

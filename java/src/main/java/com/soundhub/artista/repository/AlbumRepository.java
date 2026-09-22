@@ -25,9 +25,14 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
             """)
     List<Album> findAllComArtista();
 
+    /**
+     * Traz tambem o usuario dono do artista: e ele que a validacao de permissao
+     * compara com quem esta logado.
+     */
     @Query("""
             SELECT a FROM Album a
-            JOIN FETCH a.artista
+            JOIN FETCH a.artista ar
+            JOIN FETCH ar.usuario
             WHERE a.id = :id
             """)
     Optional<Album> findByIdComArtista(@Param("id") Long id);

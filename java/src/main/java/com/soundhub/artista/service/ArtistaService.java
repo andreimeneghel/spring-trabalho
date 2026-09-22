@@ -14,6 +14,7 @@ import com.soundhub.common.exception.RegraNegocioException;
 import com.soundhub.usuario.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,8 +90,9 @@ public class ArtistaService {
     }
 
     @Transactional
-    public ArtistaDetalheDTO atualizar(Long id, ArtistaRequestDTO dto) {
+    public ArtistaDetalheDTO atualizar(Long id, ArtistaRequestDTO dto, Usuario logado) {
         Artista artista = buscarEntidade(id);
+        validarDono(artista, logado);
 
         String nome = dto.nomeArtistico().trim();
         if (artistaRepository.existsByNomeArtisticoIgnoreCaseAndIdNot(nome, id)) {
@@ -110,8 +112,9 @@ public class ArtistaService {
      * nao sobrou nada pendurado.
      */
     @Transactional
-    public void excluir(Long id) {
+    public void excluir(Long id, Usuario logado) {
         Artista artista = buscarEntidade(id);
+        validarDono(artista, logado);
 
         long albuns = albumRepository.countByArtistaId(id);
         long musicas = artistaRepository.contarMusicas(id);
@@ -130,6 +133,13 @@ public class ArtistaService {
     private Artista buscarEntidade(Long id) {
         return artistaRepository.findByIdComUsuario(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Artista", id));
+    }
+
+    /** Cada usuario so mexe no proprio perfil de artista. */
+    private void validarDono(Artista artista, Usuario logado) {
+        if (!artista.getUsuario().getId().equals(logado.getId())) {
+            throw new AccessDeniedException("Este perfil de artista pertence a outro usuario");
+        }
     }
 
     private ArtistaDetalheDTO montarDetalhe(Artista artista) {
