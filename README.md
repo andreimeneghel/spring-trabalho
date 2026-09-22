@@ -1,0 +1,481 @@
+# SoundHub
+
+Plataforma de streaming de musica inspirada no Spotify, feita como Trabalho 1 da disciplina de
+Desenvolvimento Backend com Spring Boot. Artistas publicam musicas e albuns; ouvintes escutam,
+montam playlists e avaliam musicas.
+
+API REST com Spring Boot 3, autenticacao via JWT, PostgreSQL e migrations com Flyway.
+
+---
+
+## Equipe
+
+| Integrante | Responsabilidade |
+|---|---|
+| Andrei de Jesus Meneghel | Usuario (cadastro, login) e autenticacao/autorizacao com JWT |
+| Gustavo Bratti Inacio | Artista e Album |
+| Douglas Barra | Musica e Categoria |
+| Luiz Fellipe Rocha | Playlist e Avaliacao |
+
+---
+
+## Tecnologias
+
+- Java 25
+- Spring Boot 3.5.6 (Web, Data JPA, Security, Validation)
+- PostgreSQL 16 + Flyway
+- JWT (jjwt 0.12.6)
+- Lombok
+- Swagger / OpenAPI (springdoc)
+- H2 em memoria (somente nos testes)
+
+---
+
+## Como rodar
+
+### 1. Pre-requisitos
+
+- JDK 25
+- Docker (para subir o Postgres) ou um PostgreSQL local na porta 5432
+
+### 2. Subir o banco
+
+```bash
+docker compose up -d
+```
+
+Isso cria o banco `soundhub` (usuario `postgres`, senha `123`) na porta 5432.
+
+Se preferir usar um Postgres que ja esta instalado, crie o banco manualmente e ajuste as
+variaveis de ambiente:
+
+```bash
+export DB_URL=jdbc:postgresql://localhost:5432/soundhub
+export DB_USER=postgres
+export DB_PASSWORD=suasenha
+```
+
+### 3. Rodar a aplicacao
+
+```bash
+./mvnw spring-boot:run
+```
+
+No Windows (PowerShell/CMD):
+
+```
+mvnw.cmd spring-boot:run
+```
+
+A aplicacao sobe em `http://localhost:8080`. O Flyway cria e versiona as tabelas sozinho na
+primeira execucao — nao e preciso rodar nenhum SQL na mao.
+
+### 4. Rodar os testes
+
+```bash
+./mvnw test
+```
+
+Os testes usam H2 em memoria, entao rodam sem precisar do Docker nem do Postgres.
+
+### 5. Swagger
+
+Com a aplicacao no ar: **http://localhost:8080/swagger-ui.html**
+
+Para testar as rotas protegidas: faca login, copie o `token` da resposta, clique em
+**Authorize** no topo da pagina e cole o token (sem escrever `Bearer `).
+
+---
+
+## Estrutura de pastas
+
+O projeto e organizado **por modulo** (package-by-feature): cada entidade principal tem a sua
+pasta, e dentro dela ficam as camadas. As camadas continuam separadas — Controller, Service,
+Repository, Entity e DTO — so que agrupadas por assunto em vez de espalhadas pelo projeto.
+
+```
+src/main/java/com/soundhub/
+├── auth/                        # login e cadastro (Andrei)
+│   ├── controller/AuthController.java
+│   ├── service/AuthService.java
+│   └── dto/                     # nao tem entity nem repository: ver nota abaixo
+├── usuario/                     # CRUD de usuario (Andrei)
+│   ├── controller/  service/  repository/  entity/  dto/
+├── artista/                     # Artista e Album (Gustavo)
+│   └── entity/
+├── musica/                      # Musica e Categoria (Douglas)
+│   ├── repository/  entity/
+├── playlist/                    # Playlist (Luiz Fellipe)
+│   ├── controller/PlaylistController.java
+│   ├── service/PlaylistService.java
+│   ├── repository/PlaylistRepository.java
+│   ├── entity/Playlist.java, PlaylistMusica.java
+│   └── dto/
+├── avaliacao/                   # Avaliacao (Luiz Fellipe)
+│   ├── controller/  service/  repository/  entity/  dto/
+└── common/                      # compartilhado por todos os modulos
+    ├── config/                  # SecurityConfig, OpenApiConfig
+    ├── exception/               # GlobalExceptionHandler e as excecoes
+    ├── security/                # filtro JWT, JwtService, UserDetailsService
+    └── util/
+
+Duas observacoes sobre a estrutura:
+
+- **`auth/` nao tem `entity/` nem `repository/`** porque autenticacao nao tem tabela propria:
+  nao existe uma entidade `Auth` para persistir. O `AuthService` trabalha em cima de `Usuario`
+  e usa o `UsuarioRepository`, que ficam no modulo `usuario/`. Criar um repositorio proprio ali
+  seria duplicar o acesso a mesma tabela.
+- **`musica/` e `artista/` so tem `entity/` e `repository/` por enquanto.** Essas entidades
+  foram criadas na versao minima porque Playlist e Avaliacao dependem delas para compilar; o
+  CRUD completo fica com o Douglas e o Gustavo, e as pastas ja estao reservadas.
+
+src/main/resources/
+├── application.yml
+└── db/migration/                # migrations do Flyway
+    ├── V1__create_usuario.sql
+    ├── V2__create_artista_album_musica_categoria.sql
+    └── V3__create_playlist_avaliacao.sql
+```
+
+---
+
+## Modelo de dados
+
+| Relacionamento | Tipo |
+|---|---|
+| Usuario → Artista | 1:1 |
+| Artista → Album | 1:N |
+| Artista → Musica | 1:N |
+| Album → Musica | 1:N |
+| Usuario → Playlist | 1:N |
+| Usuario → Avaliacao | 1:N |
+| Musica → Avaliacao | 1:N |
+| Playlist ↔ Musica | N:N (`playlist_musica`, com a coluna `ordem`) |
+| Musica ↔ Categoria | N:N (`musica_categoria`) |
+
+Restricoes de integridade que valem destacar:
+
+- `uk_playlist_usuario_nome` — o mesmo usuario nao pode ter duas playlists com o mesmo nome.
+- `uk_avaliacao_usuario_musica` — cada usuario avalia uma musica uma unica vez.
+- `ck_avaliacao_nota` — a nota so aceita valores de 1 a 5.
+
+---
+
+## Autenticacao
+
+Todas as rotas exigem token JWT, com excecao de `/auth/**` e do Swagger.
+
+O token e devolvido no cadastro e no login, e deve ser enviado no header:
+
+```
+Authorization: Bearer <token>
+```
+
+Existem dois tipos de usuario: `OUVINTE` e `ARTISTA`. Ambos podem criar playlists e avaliar
+musicas; apenas o `ARTISTA` pode cadastrar albuns e musicas.
+
+---
+
+## Endpoints
+
+### Autenticacao — publico
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| POST | `/auth/registrar` | Cadastra usuario e ja devolve o token |
+| POST | `/auth/login` | Faz login e devolve o token |
+
+### Usuario
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/usuarios` | Lista os usuarios |
+| GET | `/usuarios/me` | Dados do usuario logado |
+| GET | `/usuarios/{id}` | Busca por id |
+| PUT | `/usuarios/{id}` | Atualiza nome e email (so a propria conta) |
+| PATCH | `/usuarios/{id}/senha` | Altera a senha (so a propria conta) |
+| DELETE | `/usuarios/{id}` | Exclui a conta (so a propria conta) |
+
+### Playlist
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/playlists` | Playlists publicas + as suas proprias |
+| GET | `/playlists/minhas` | Todas as suas, inclusive as privadas |
+| GET | `/playlists/usuario/{usuarioId}` | Playlists de um usuario |
+| GET | `/playlists/busca?nome=rock` | Busca playlists publicas pelo nome |
+| GET | `/playlists/{id}` | Detalhe com as musicas, na ordem |
+| POST | `/playlists` | Cria playlist |
+| PUT | `/playlists/{id}` | Atualiza (so o dono) |
+| DELETE | `/playlists/{id}` | Exclui (so o dono) |
+| POST | `/playlists/{id}/musicas` | Adiciona musica no fim (so o dono) |
+| DELETE | `/playlists/{id}/musicas/{musicaId}` | Remove musica (so o dono) |
+
+### Avaliacao
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/musicas/{musicaId}/avaliacoes` | Avaliacoes de uma musica |
+| GET | `/musicas/{musicaId}/avaliacoes/media` | Media das notas e total |
+| POST | `/musicas/{musicaId}/avaliacoes` | Avalia a musica (1 por usuario) |
+| GET | `/avaliacoes/minhas` | Avaliacoes que voce fez |
+| GET | `/avaliacoes/{id}` | Busca por id |
+| PUT | `/avaliacoes/{id}` | Altera nota/comentario (so o autor) |
+| DELETE | `/avaliacoes/{id}` | Exclui (so o autor) |
+
+---
+
+## Exemplos de requests e responses
+
+### Cadastro
+
+```http
+POST /auth/registrar
+Content-Type: application/json
+
+{
+  "nome": "Luiz Fellipe",
+  "email": "luiz@soundhub.com",
+  "senha": "senha123",
+  "tipo": "OUVINTE"
+}
+```
+
+**201 Created**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "tipo": "Bearer",
+  "expiraEmMs": 86400000,
+  "usuario": {
+    "id": 1,
+    "nome": "Luiz Fellipe",
+    "email": "luiz@soundhub.com",
+    "tipo": "OUVINTE"
+  }
+}
+```
+
+### Login
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "luiz@soundhub.com",
+  "senha": "senha123"
+}
+```
+
+**200 OK** — mesma resposta do cadastro.
+
+### Criar playlist
+
+```http
+POST /playlists
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "nome": "Favoritas",
+  "descricao": "as que eu mais ouço",
+  "publica": true
+}
+```
+
+**201 Created**
+
+```json
+{
+  "id": 1,
+  "nome": "Favoritas",
+  "descricao": "as que eu mais ouço",
+  "publica": true,
+  "criadaEm": "2026-09-22T10:15:30",
+  "donoId": 1,
+  "donoNome": "Luiz Fellipe",
+  "totalMusicas": 0,
+  "duracaoTotal": 0,
+  "musicas": []
+}
+```
+
+### Adicionar musica na playlist
+
+```http
+POST /playlists/1/musicas
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "musicaId": 3
+}
+```
+
+**200 OK**
+
+```json
+{
+  "id": 1,
+  "nome": "Favoritas",
+  "publica": true,
+  "totalMusicas": 1,
+  "duracaoTotal": 210,
+  "musicas": [
+    {
+      "musicaId": 3,
+      "titulo": "Musica Um",
+      "duracao": 210,
+      "artista": "Banda Teste",
+      "ordem": 0
+    }
+  ]
+}
+```
+
+### Avaliar uma musica
+
+```http
+POST /musicas/3/avaliacoes
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "nota": 5,
+  "comentario": "musica muito boa"
+}
+```
+
+**201 Created**
+
+```json
+{
+  "id": 1,
+  "nota": 5,
+  "comentario": "musica muito boa",
+  "criadaEm": "2026-09-22T10:20:00",
+  "atualizadaEm": null,
+  "usuarioId": 1,
+  "usuarioNome": "Luiz Fellipe",
+  "musicaId": 3,
+  "musicaTitulo": "Musica Um"
+}
+```
+
+### Media das notas
+
+```http
+GET /musicas/3/avaliacoes/media
+Authorization: Bearer <token>
+```
+
+**200 OK**
+
+```json
+{
+  "musicaId": 3,
+  "musicaTitulo": "Musica Um",
+  "media": 4.5,
+  "totalAvaliacoes": 2
+}
+```
+
+---
+
+## Tratamento de erros
+
+Todo erro da API volta no mesmo formato, montado pelo `GlobalExceptionHandler`
+(`@RestControllerAdvice`).
+
+### Erro de validacao — 400
+
+```json
+{
+  "timestamp": "2026-09-22T10:30:00",
+  "status": 400,
+  "erro": "Erro de validacao",
+  "mensagem": "Um ou mais campos estao invalidos",
+  "caminho": "/musicas/3/avaliacoes",
+  "campos": {
+    "nota": "A nota maxima e 5"
+  }
+}
+```
+
+### Recurso nao encontrado — 404
+
+```json
+{
+  "timestamp": "2026-09-22T10:31:00",
+  "status": 404,
+  "erro": "Not Found",
+  "mensagem": "Playlist com id 99 nao encontrado(a)",
+  "caminho": "/playlists/99"
+}
+```
+
+### Conflito — 409
+
+```json
+{
+  "timestamp": "2026-09-22T10:32:00",
+  "status": 409,
+  "erro": "Conflict",
+  "mensagem": "Voce ja avaliou esta musica. Use PUT para alterar a sua avaliacao",
+  "caminho": "/musicas/3/avaliacoes"
+}
+```
+
+| Status | Quando acontece |
+|---|---|
+| 400 | Campo invalido, JSON mal formado ou regra de negocio quebrada |
+| 401 | Token ausente, invalido ou expirado; email/senha errados |
+| 403 | Tentou alterar algo de outro usuario, ou abrir playlist privada alheia |
+| 404 | Id inexistente |
+| 409 | Dado duplicado (email, nome de playlist, avaliacao repetida) |
+| 500 | Erro inesperado |
+
+---
+
+## Credenciais
+
+O banco nao vem com usuario pre-cadastrado — o primeiro usuario e criado pelo
+`POST /auth/registrar`.
+
+Sugestao para testar os dois perfis:
+
+| Tipo | Email | Senha |
+|---|---|---|
+| OUVINTE | ouvinte@soundhub.com | senha123 |
+| ARTISTA | artista@soundhub.com | senha123 |
+
+**Banco de dados (desenvolvimento):**
+
+| | |
+|---|---|
+| Host | localhost:5432 |
+| Banco | soundhub |
+| Usuario | postgres |
+| Senha | 123 |
+
+As senhas dos usuarios sao gravadas com hash BCrypt — nunca em texto puro. A chave do JWT e as
+credenciais do banco podem ser trocadas pelas variaveis de ambiente `JWT_SECRET`, `DB_URL`,
+`DB_USER` e `DB_PASSWORD`.
+
+---
+
+## Observacoes sobre a modelagem
+
+**Por que `PlaylistMusica` e uma entidade, e nao um `@ManyToMany` simples:** a tabela de
+ligacao guarda dados proprios (a ordem da musica na playlist e a data em que foi adicionada),
+e isso nao cabe num `@ManyToMany` puro. Ao remover uma musica do meio da playlist, a ordem e
+refeita para nao ficar com buracos na numeracao.
+
+**Playlist privada:** a playlist tem a flag `publica`. Quando esta `false`, so o dono consegue
+abrir e ela nao aparece nas listagens dos outros usuarios.
+
+**Avaliacao:** cada usuario avalia uma musica uma unica vez — para mudar de ideia, usa-se o
+`PUT`, que atualiza a nota e preenche o campo `atualizadaEm`. Um artista nao pode avaliar a
+propria musica.
