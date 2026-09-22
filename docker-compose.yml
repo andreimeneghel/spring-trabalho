@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: soundhub-db
+    environment:
+      POSTGRES_DB: soundhub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123"
+    ports:
+      - "5432:5432"
+    volumes:
+      - soundhub-data:/var/lib/postgresql/data
+
+volumes:
+  soundhub-data:
