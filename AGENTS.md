@@ -30,14 +30,14 @@ spring-trabalho/
 | Integrante | Módulo | Estado |
 |---|---|---|
 | Andrei | `usuario/`, `auth/` | pronto |
-| Gustavo | `artista/` (Artista, Album)  |
+| Gustavo | `artista/` (Artista, Album) | pronto, com testes |
 | Douglas | `musica/` (Musica, Categoria) |
 | Luiz Fellipe | `playlist/`, `avaliacao/` | pronto, com testes |
 
-**Importante:** `artista/` e `musica/` têm apenas entity e repository porque Playlist e
-Avaliação dependem deles para compilar. O CRUD completo é responsabilidade do Gustavo e do
-Douglas — as pastas `controller/`, `service/` e `dto/` já estão reservadas com um
-`LEIA-ME.md` dentro. **Não implemente a parte deles sem combinar antes.**
+**Importante:** `musica/` tem apenas entity e repository porque Playlist e Avaliação
+dependem dele para compilar. O CRUD completo é responsabilidade do Douglas — as pastas
+`controller/`, `service/` e `dto/` já estão reservadas com um `LEIA-ME.md` dentro.
+**Não implemente a parte dele sem combinar antes.**
 
 ---
 
@@ -51,7 +51,7 @@ Nunca conclua uma tarefa sem executar. Compilar não é testar.
 
 ```bash
 cd java
-./mvnw test                    # 12 testes; usa H2, não precisa de Docker
+./mvnw test                    # 25 testes; usa H2, não precisa de Docker
 ./mvnw spring-boot:run         # sobe de verdade contra o Postgres
 ```
 
@@ -165,7 +165,7 @@ Cada entidade tem sua pasta, e dentro dela as camadas separadas:
 java/src/main/java/com/soundhub/
 ├── auth/         controller/  service/  dto/
 ├── usuario/      controller/  service/  repository/  entity/  dto/
-├── artista/      entity/                      (Gustavo)
+├── artista/      controller/  service/  repository/  entity/  dto/   (Gustavo)
 ├── musica/       repository/  entity/         (Douglas)
 ├── playlist/     controller/  service/  repository/  entity/  dto/
 ├── avaliacao/    controller/  service/  repository/  entity/  dto/
@@ -226,8 +226,10 @@ entidades com o schema e falha se divergirem.
 ### Testes
 
 `PlaylistAvaliacaoIntegrationTest` tem 11 testes cobrindo ordem das músicas, reordenação ao
-remover do meio, permissões, duplicidade e cálculo de média. Roda com H2 em memória
-(`application-test.yml`), então não precisa de Docker.
+remover do meio, permissões, duplicidade e cálculo de média. `ArtistaAlbumIntegrationTest`
+tem 13 cobrindo perfil único por usuário, nomes duplicados, permissão de dono, ano de
+lançamento e exclusão em cascata bloqueada. Os dois rodam com H2 em memória
+(`application-test.yml`), então não precisam de Docker.
 
 **Ao adicionar lógica de negócio, adicione teste.** Use esse arquivo como modelo.
 

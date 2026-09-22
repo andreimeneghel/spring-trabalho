@@ -150,7 +150,7 @@ java/src/main/java/com/soundhub/
 ├── usuario/                     # CRUD de usuario (Andrei)
 │   └── controller/  service/  repository/  entity/  dto/
 ├── artista/                     # Artista e Album (Gustavo)
-│   └── entity/
+│   └── controller/  service/  repository/  entity/  dto/
 ├── musica/                      # Musica e Categoria (Douglas)
 │   └── repository/  entity/
 ├── playlist/                    # Playlist (Luiz Fellipe)
@@ -183,9 +183,9 @@ Duas observacoes sobre a estrutura:
   nao existe uma entidade `Auth` para persistir. O `AuthService` trabalha em cima de `Usuario`
   e usa o `UsuarioRepository`, que ficam no modulo `usuario/`. Criar um repositorio proprio ali
   seria duplicar o acesso a mesma tabela.
-- **`musica/` e `artista/` so tem `entity/` e `repository/` por enquanto.** Essas entidades
-  foram criadas na versao minima porque Playlist e Avaliacao dependem delas para compilar; o
-  CRUD completo fica com o Douglas e o Gustavo, e as pastas ja estao reservadas.
+- **`musica/` ainda so tem `entity/` e `repository/`.** Essas entidades foram criadas na
+  versao minima porque Playlist e Avaliacao dependem delas para compilar; o CRUD completo
+  fica com o Douglas, e as pastas ja estao reservadas. O modulo `artista/` ja esta completo.
 
 ### Frontend — `front/`
 
@@ -295,6 +295,30 @@ musicas; apenas o `ARTISTA` pode cadastrar albuns e musicas.
 | DELETE | `/playlists/{id}` | Exclui (so o dono) |
 | POST | `/playlists/{id}/musicas` | Adiciona musica no fim (so o dono) |
 | DELETE | `/playlists/{id}/musicas/{musicaId}` | Remove musica (so o dono) |
+
+### Artista
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/artistas` | Lista os artistas |
+| GET | `/artistas/busca?nome=banda` | Busca pelo nome artistico |
+| GET | `/artistas/meu-perfil` | Seu perfil de artista (404 se nao tiver) |
+| GET | `/artistas/{id}` | Detalhe com as contagens e os albuns |
+| POST | `/artistas` | Cria o seu perfil de artista (so ARTISTA) |
+| PUT | `/artistas/{id}` | Atualiza (so ARTISTA e so o dono) |
+| DELETE | `/artistas/{id}` | Exclui (so o dono, e so se nao tiver album nem musica) |
+
+### Album
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/albuns` | Lista os albuns |
+| GET | `/albuns/busca?titulo=raizes` | Busca pelo titulo |
+| GET | `/albuns/artista/{artistaId}` | Albuns de um artista, mais recentes primeiro |
+| GET | `/albuns/{id}` | Detalhe com a quantidade de musicas |
+| POST | `/albuns` | Cria album no seu perfil de artista (so ARTISTA) |
+| PUT | `/albuns/{id}` | Atualiza (so o artista dono) |
+| DELETE | `/albuns/{id}` | Exclui (so o artista dono; as musicas ficam sem album) |
 
 ### Avaliacao
 
@@ -419,6 +443,66 @@ Content-Type: application/json
   ]
 }
 ```
+
+### Criar perfil de artista
+
+```http
+POST /artistas
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "nomeArtistico": "Banda do Morro",
+  "biografia": "banda de rock de Criciuma"
+}
+```
+
+**201 Created**
+
+```json
+{
+  "id": 1,
+  "nomeArtistico": "Banda do Morro",
+  "biografia": "banda de rock de Criciuma",
+  "usuarioId": 3,
+  "usuarioNome": "Gustavo",
+  "totalAlbuns": 0,
+  "totalMusicas": 0,
+  "albuns": []
+}
+```
+
+Precisa ser um usuario `tipo: "ARTISTA"` (senao **403**) e que ainda nao tenha perfil
+(senao **409**).
+
+### Criar album
+
+```http
+POST /albuns
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "titulo": "Raizes",
+  "anoLancamento": 2024
+}
+```
+
+**201 Created**
+
+```json
+{
+  "id": 1,
+  "titulo": "Raizes",
+  "anoLancamento": 2024,
+  "artistaId": 1,
+  "artistaNome": "Banda do Morro",
+  "totalMusicas": 0
+}
+```
+
+O album nao recebe `artistaId`: ele e sempre criado no perfil de artista de quem esta
+logado. Sem perfil, volta **400**.
 
 ### Avaliar uma musica
 
