@@ -32,6 +32,10 @@ public class Artista {
     @Column(length = 1000)
     private String biografia;
 
+    /** Foto do artista como data URI em base64. Null quando nao tem foto. */
+    @Column(columnDefinition = "TEXT")
+    private String foto;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false, unique = true)
     private Usuario usuario;

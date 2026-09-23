@@ -58,7 +58,7 @@ class ArtistaAlbumIntegrationTest {
     @DisplayName("cria o perfil de artista do usuario logado e devolve no detalhe")
     void criarPerfil() {
         ArtistaDetalheDTO artista = artistaService.criar(
-                new ArtistaRequestDTO("Banda Teste", "uma bio"), dono);
+                new ArtistaRequestDTO("Banda Teste", "uma bio", null), dono);
 
         assertThat(artista.id()).isNotNull();
         assertThat(artista.nomeArtistico()).isEqualTo("Banda Teste");
@@ -73,7 +73,7 @@ class ArtistaAlbumIntegrationTest {
     @DisplayName("biografia em branco vira null")
     void biografiaEmBranco() {
         ArtistaDetalheDTO artista = artistaService.criar(
-                new ArtistaRequestDTO("Sem Bio", "   "), dono);
+                new ArtistaRequestDTO("Sem Bio", "   ", null), dono);
 
         assertThat(artista.biografia()).isNull();
     }
@@ -81,20 +81,20 @@ class ArtistaAlbumIntegrationTest {
     @Test
     @DisplayName("o mesmo usuario nao pode ter dois perfis de artista")
     void perfilDuplicado() {
-        artistaService.criar(new ArtistaRequestDTO("Primeiro", null), dono);
+        artistaService.criar(new ArtistaRequestDTO("Primeiro", null, null), dono);
 
         assertThatThrownBy(() ->
-                artistaService.criar(new ArtistaRequestDTO("Segundo", null), dono))
+                artistaService.criar(new ArtistaRequestDTO("Segundo", null, null), dono))
                 .isInstanceOf(ConflitoException.class);
     }
 
     @Test
     @DisplayName("nome artistico e unico, ignorando maiusculas e minusculas")
     void nomeArtisticoDuplicado() {
-        artistaService.criar(new ArtistaRequestDTO("Repetido", null), dono);
+        artistaService.criar(new ArtistaRequestDTO("Repetido", null, null), dono);
 
         assertThatThrownBy(() ->
-                artistaService.criar(new ArtistaRequestDTO("repetido", null), outroArtista))
+                artistaService.criar(new ArtistaRequestDTO("repetido", null, null), outroArtista))
                 .isInstanceOf(ConflitoException.class);
     }
 
@@ -109,10 +109,10 @@ class ArtistaAlbumIntegrationTest {
     @DisplayName("so o dono altera ou exclui o proprio perfil de artista")
     void somenteDonoAlteraArtista() {
         ArtistaDetalheDTO artista = artistaService.criar(
-                new ArtistaRequestDTO("Do Dono", null), dono);
+                new ArtistaRequestDTO("Do Dono", null, null), dono);
 
         assertThatThrownBy(() -> artistaService.atualizar(
-                artista.id(), new ArtistaRequestDTO("Invadido", null), outroArtista))
+                artista.id(), new ArtistaRequestDTO("Invadido", null, null), outroArtista))
                 .isInstanceOf(AccessDeniedException.class);
 
         assertThatThrownBy(() -> artistaService.excluir(artista.id(), outroArtista))
@@ -125,9 +125,9 @@ class ArtistaAlbumIntegrationTest {
     @DisplayName("cria album no perfil do usuario logado e ele aparece no detalhe do artista")
     void criarAlbum() {
         ArtistaDetalheDTO artista = artistaService.criar(
-                new ArtistaRequestDTO("Com Album", null), dono);
+                new ArtistaRequestDTO("Com Album", null, null), dono);
 
-        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Raizes", 2020), dono);
+        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Raizes", 2020, null), dono);
 
         assertThat(album.id()).isNotNull();
         assertThat(album.artistaId()).isEqualTo(artista.id());
@@ -141,45 +141,45 @@ class ArtistaAlbumIntegrationTest {
     @Test
     @DisplayName("nao deixa cadastrar album sem ter perfil de artista")
     void albumSemPerfil() {
-        assertThatThrownBy(() -> albumService.criar(new AlbumRequestDTO("Solto", null), dono))
+        assertThatThrownBy(() -> albumService.criar(new AlbumRequestDTO("Solto", null, null), dono))
                 .isInstanceOf(RegraNegocioException.class);
     }
 
     @Test
     @DisplayName("titulo de album e unico dentro do mesmo artista, mas pode repetir entre artistas")
     void tituloDuplicado() {
-        artistaService.criar(new ArtistaRequestDTO("Artista A", null), dono);
-        artistaService.criar(new ArtistaRequestDTO("Artista B", null), outroArtista);
+        artistaService.criar(new ArtistaRequestDTO("Artista A", null, null), dono);
+        artistaService.criar(new ArtistaRequestDTO("Artista B", null, null), outroArtista);
 
-        albumService.criar(new AlbumRequestDTO("Ao Vivo", 2021), dono);
+        albumService.criar(new AlbumRequestDTO("Ao Vivo", 2021, null), dono);
 
-        assertThatThrownBy(() -> albumService.criar(new AlbumRequestDTO("ao vivo", 2022), dono))
+        assertThatThrownBy(() -> albumService.criar(new AlbumRequestDTO("ao vivo", 2022, null), dono))
                 .isInstanceOf(ConflitoException.class);
 
-        assertThat(albumService.criar(new AlbumRequestDTO("Ao Vivo", 2022), outroArtista).id())
+        assertThat(albumService.criar(new AlbumRequestDTO("Ao Vivo", 2022, null), outroArtista).id())
                 .isNotNull();
     }
 
     @Test
     @DisplayName("ano de lancamento no futuro e recusado")
     void anoNoFuturo() {
-        artistaService.criar(new ArtistaRequestDTO("Do Futuro", null), dono);
+        artistaService.criar(new ArtistaRequestDTO("Do Futuro", null, null), dono);
         int anoQueVem = Year.now().getValue() + 1;
 
-        assertThatThrownBy(() -> albumService.criar(new AlbumRequestDTO("Amanha", anoQueVem), dono))
+        assertThatThrownBy(() -> albumService.criar(new AlbumRequestDTO("Amanha", anoQueVem, null), dono))
                 .isInstanceOf(RegraNegocioException.class);
     }
 
     @Test
     @DisplayName("so o artista dono altera ou exclui o album")
     void somenteDonoAlteraAlbum() {
-        artistaService.criar(new ArtistaRequestDTO("Dono do Album", null), dono);
-        artistaService.criar(new ArtistaRequestDTO("Intruso", null), outroArtista);
+        artistaService.criar(new ArtistaRequestDTO("Dono do Album", null, null), dono);
+        artistaService.criar(new ArtistaRequestDTO("Intruso", null, null), outroArtista);
 
-        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Meu", 2019), dono);
+        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Meu", 2019, null), dono);
 
         assertThatThrownBy(() -> albumService.atualizar(
-                album.id(), new AlbumRequestDTO("Roubado", 2019), outroArtista))
+                album.id(), new AlbumRequestDTO("Roubado", 2019, null), outroArtista))
                 .isInstanceOf(AccessDeniedException.class);
 
         assertThatThrownBy(() -> albumService.excluir(album.id(), outroArtista))
@@ -192,8 +192,8 @@ class ArtistaAlbumIntegrationTest {
     @DisplayName("nao exclui artista que ainda tem album, e exclui depois que ele sai")
     void exclusaoBloqueadaPorAlbum() {
         ArtistaDetalheDTO artista = artistaService.criar(
-                new ArtistaRequestDTO("Com Pendencia", null), dono);
-        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Unico", 2018), dono);
+                new ArtistaRequestDTO("Com Pendencia", null, null), dono);
+        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Unico", 2018, null), dono);
 
         assertThatThrownBy(() -> artistaService.excluir(artista.id(), dono))
                 .isInstanceOf(RegraNegocioException.class);
@@ -208,8 +208,8 @@ class ArtistaAlbumIntegrationTest {
     @Test
     @DisplayName("excluir album nao apaga as musicas: elas ficam sem album")
     void excluirAlbumMantemMusicas() {
-        artistaService.criar(new ArtistaRequestDTO("Com Musica", null), dono);
-        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Com Faixas", 2017), dono);
+        artistaService.criar(new ArtistaRequestDTO("Com Musica", null, null), dono);
+        AlbumDetalheDTO album = albumService.criar(new AlbumRequestDTO("Com Faixas", 2017, null), dono);
 
         Album albumRef = em.find(Album.class, album.id());
         Musica musica = Musica.builder()
@@ -236,7 +236,7 @@ class ArtistaAlbumIntegrationTest {
     @DisplayName("artista com musica nao pode ser excluido")
     void exclusaoBloqueadaPorMusica() {
         ArtistaDetalheDTO artista = artistaService.criar(
-                new ArtistaRequestDTO("So Com Musica", null), dono);
+                new ArtistaRequestDTO("So Com Musica", null, null), dono);
 
         Artista artistaRef = em.find(Artista.class, artista.id());
         em.persist(Musica.builder()

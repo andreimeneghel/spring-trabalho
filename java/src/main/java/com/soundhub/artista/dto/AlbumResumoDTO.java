@@ -7,6 +7,8 @@ public record AlbumResumoDTO(
         Long id,
         String titulo,
         Integer anoLancamento,
+        /** Data URI em base64, ou null. */
+        String capa,
         Long artistaId,
         String artistaNome
 ) {
@@ -15,6 +17,7 @@ public record AlbumResumoDTO(
                 album.getId(),
                 album.getTitulo(),
                 album.getAnoLancamento(),
+                album.getCapa(),
                 album.getArtista().getId(),
                 album.getArtista().getNomeArtistico());
     }

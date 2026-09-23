@@ -9,6 +9,8 @@ public record ArtistaDetalheDTO(
         Long id,
         String nomeArtistico,
         String biografia,
+        /** Data URI em base64, ou null. */
+        String foto,
         Long usuarioId,
         String usuarioNome,
         long totalAlbuns,
@@ -22,6 +24,7 @@ public record ArtistaDetalheDTO(
                 artista.getId(),
                 artista.getNomeArtistico(),
                 artista.getBiografia(),
+                artista.getFoto(),
                 artista.getUsuario().getId(),
                 artista.getUsuario().getNome(),
                 albuns.size(),

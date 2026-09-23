@@ -3,9 +3,10 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Mic2 } from "lucide-react";
 
 import type { EstadoForm } from "@/app/(app)/artista/actions";
+import { SeletorImagem } from "@/components/comum/seletor-imagem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,14 @@ export function ArtistaForm({
           {estado.erro}
         </p>
       )}
+
+      <SeletorImagem
+        name="foto"
+        valorInicial={artista?.foto}
+        rotulo="Foto do artista"
+        Icone={Mic2}
+        formato="circulo"
+      />
 
       <div className="space-y-2">
         <Label htmlFor="nomeArtistico">Nome artístico</Label>

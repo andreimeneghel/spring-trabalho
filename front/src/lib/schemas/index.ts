@@ -75,6 +75,8 @@ export const artistaSchema = z.object({
     .min(1, "O nome artístico é obrigatório")
     .max(100, "Máximo de 100 caracteres"),
   biografia: z.string().max(1000, "Máximo de 1000 caracteres").optional(),
+  // formato e tamanho sao validados no componente e no backend
+  foto: z.string().optional(),
 });
 
 export const albumSchema = z.object({
@@ -85,6 +87,7 @@ export const albumSchema = z.object({
     .min(1900, "O ano deve ser a partir de 1900")
     .max(new Date().getFullYear(), "O ano não pode ser no futuro")
     .optional(),
+  capa: z.string().optional(),
 });
 
 export type ArtistaInput = z.infer<typeof artistaSchema>;

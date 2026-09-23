@@ -174,7 +174,8 @@ java/src/main/resources/
     ├── V2__create_artista_album_musica_categoria.sql
     ├── V3__create_playlist_avaliacao.sql
     ├── V4__add_foto_usuario.sql
-    └── V5__add_capa_playlist.sql
+    ├── V5__add_capa_playlist.sql
+    └── V6__add_foto_artista_capa_album.sql
 ```
 
 Duas observacoes sobre a estrutura:

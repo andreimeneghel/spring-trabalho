@@ -24,6 +24,10 @@ public class Album {
     @Column(name = "ano_lancamento")
     private Integer anoLancamento;
 
+    /** Capa do album como data URI em base64. Null quando nao tem capa. */
+    @Column(columnDefinition = "TEXT")
+    private String capa;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "artista_id", nullable = false)
     private Artista artista;

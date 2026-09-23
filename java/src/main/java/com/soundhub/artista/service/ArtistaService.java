@@ -80,6 +80,7 @@ public class ArtistaService {
         Artista artista = Artista.builder()
                 .nomeArtistico(nome)
                 .biografia(normalizarBiografia(dto.biografia()))
+                .foto(normalizarImagem(dto.foto()))
                 .usuario(logado)
                 .build();
 
@@ -101,6 +102,7 @@ public class ArtistaService {
 
         artista.setNomeArtistico(nome);
         artista.setBiografia(normalizarBiografia(dto.biografia()));
+        artista.setFoto(normalizarImagem(dto.foto()));
         log.info("Artista atualizado: id={}", id);
 
         return montarDetalhe(artistaRepository.save(artista));
@@ -150,6 +152,14 @@ public class ArtistaService {
     }
 
     /** Biografia em branco vinda do formulario vira null, para nao gravar lixo no banco. */
+    /** String vazia vinda do formulario vira null, para nao gravar lixo no banco. */
+    private String normalizarImagem(String imagem) {
+        if (imagem == null || imagem.isBlank()) {
+            return null;
+        }
+        return imagem;
+    }
+
     private String normalizarBiografia(String biografia) {
         if (biografia == null || biografia.isBlank()) {
             return null;

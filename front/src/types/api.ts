@@ -94,6 +94,8 @@ export interface ArtistaResumo {
   id: number;
   nomeArtistico: string;
   biografia: string | null;
+  /** Foto em data URI base64 (PNG ou JPG), ou null. */
+  foto: string | null;
   usuarioId: number;
   usuarioNome: string;
 }
@@ -108,6 +110,8 @@ export interface AlbumResumo {
   id: number;
   titulo: string;
   anoLancamento: number | null;
+  /** Capa em data URI base64 (PNG ou JPG), ou null. */
+  capa: string | null;
   artistaId: number;
   artistaNome: string;
 }

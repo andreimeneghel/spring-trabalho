@@ -6,8 +6,14 @@ import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
-/** Busca com debounce: espera o usuario parar de digitar antes de navegar. */
-export function BuscaInput({ valorInicial = "" }: { valorInicial?: string }) {
+/** Busca com debounce: espera o usuário parar de digitar antes de navegar. */
+export function BuscaInput({
+  valorInicial = "",
+  placeholder = "Buscar",
+}: {
+  valorInicial?: string;
+  placeholder?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -15,15 +21,15 @@ export function BuscaInput({ valorInicial = "" }: { valorInicial?: string }) {
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    const atual = searchParams.get("nome") ?? "";
+    const atual = searchParams.get("q") ?? "";
     if (termo === atual) return;
 
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams);
       if (termo.trim()) {
-        params.set("nome", termo.trim());
+        params.set("q", termo.trim());
       } else {
-        params.delete("nome");
+        params.delete("q");
       }
       startTransition(() => {
         router.replace(`${pathname}?${params}`, { scroll: false });
@@ -39,9 +45,9 @@ export function BuscaInput({ valorInicial = "" }: { valorInicial?: string }) {
       <Input
         value={termo}
         onChange={(e) => setTermo(e.target.value)}
-        placeholder="Buscar playlists públicas"
+        placeholder={placeholder}
         className="pl-9"
-        aria-label="Buscar playlists públicas pelo nome"
+        aria-label={placeholder}
       />
     </div>
   );

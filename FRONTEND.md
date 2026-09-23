@@ -163,6 +163,7 @@ export interface ArtistaResumo {
   id: number;
   nomeArtistico: string;
   biografia: string | null;
+  foto: string | null;        // data URI base64 (PNG/JPG) ou null
   usuarioId: number;
   usuarioNome: string;
 }
@@ -177,6 +178,7 @@ export interface AlbumResumo {
   id: number;
   titulo: string;
   anoLancamento: number | null;
+  capa: string | null;        // data URI base64 (PNG/JPG) ou null
   artistaId: number;
   artistaNome: string;
 }
@@ -294,14 +296,14 @@ Regras:
 | GET    | `/artistas/busca?nome=banda`  | Busca pelo nome artistico                              |
 | GET    | `/artistas/meu-perfil`        | Seu perfil de artista (`404` se nao tiver)             |
 | GET    | `/artistas/{id}`              | Detalhe com contagens e os albuns                      |
-| POST   | `/artistas`                   | `{ nomeArtistico, biografia? }` → `201` — so ARTISTA   |
+| POST   | `/artistas`                   | `{ nomeArtistico, biografia?, foto? }` → `201` — so ARTISTA |
 | PUT    | `/artistas/{id}`              | Mesmo body do POST — so ARTISTA e so o dono            |
 | DELETE | `/artistas/{id}`              | `204` — so ARTISTA e so o dono                         |
 | GET    | `/albuns`                     | Lista todos — qualquer logado                          |
 | GET    | `/albuns/busca?titulo=raizes` | Busca pelo titulo                                      |
 | GET    | `/albuns/artista/{artistaId}` | Albuns de um artista, mais recentes primeiro           |
 | GET    | `/albuns/{id}`                | Detalhe com a quantidade de musicas                    |
-| POST   | `/albuns`                     | `{ titulo, anoLancamento? }` → `201` — so ARTISTA      |
+| POST   | `/albuns`                     | `{ titulo, anoLancamento?, capa? }` → `201` — so ARTISTA |
 | PUT    | `/albuns/{id}`                | Mesmo body do POST — so ARTISTA e so o dono            |
 | DELETE | `/albuns/{id}`                | `204` — so ARTISTA e so o dono                         |
 
@@ -324,6 +326,19 @@ Regras que o front precisa respeitar:
 - **Excluir artista com album ou musica → `400`.** Apague os albuns e as musicas antes. A
   regra existe porque o banco apagaria tudo em cascata sem avisar.
 - Excluir um album **nao apaga as musicas** dele: elas ficam sem album (`albumId: null`).
+- `foto` (artista) e `capa` (album) sao opcionais: data URI base64, **somente PNG ou JPG**,
+  ate 2MB. String vazia ou omitida grava `null`. Outro formato (GIF, SVG) volta `400` com a
+  mensagem no campo. SVG e barrado de proposito: poderia carregar script.
+
+> **Imagens de artista e album — o que o front faz.** Ja implementado em
+> `components/comum/seletor-imagem.tsx`, o mesmo componente usado na capa da playlist: le o
+> arquivo com `FileReader.readAsDataURL`, valida tipo e tamanho **antes** de enviar e guarda
+> o data URI num `<input type="hidden">`, que vai junto no submit. A foto do artista usa
+> `formato="circulo"`; a capa do album, o quadrado padrao. As imagens aparecem nos cards de
+> Descobrir, no perfil publico do artista e na area de gestao. Sem imagem, cai no icone
+> sobre fundo verde.
+>
+> Imagens base64 usam `<img>` comum, nao `next/image` — o otimizador nao processa data URI.
 
 > **Para o front:** o fluxo natural e `GET /artistas/meu-perfil` ao entrar na area do
 > artista. Se voltar `404`, mostre a tela de "criar perfil de artista" em vez de erro; se

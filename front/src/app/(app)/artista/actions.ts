@@ -30,6 +30,7 @@ export async function criarArtistaAction(
   const validado = artistaSchema.safeParse({
     nomeArtistico: String(formData.get("nomeArtistico") ?? "").trim(),
     biografia: String(formData.get("biografia") ?? "").trim() || undefined,
+    foto: String(formData.get("foto") ?? "") || undefined,
   });
 
   if (!validado.success) {
@@ -57,6 +58,7 @@ export async function atualizarArtistaAction(
   const validado = artistaSchema.safeParse({
     nomeArtistico: String(formData.get("nomeArtistico") ?? "").trim(),
     biografia: String(formData.get("biografia") ?? "").trim() || undefined,
+    foto: String(formData.get("foto") ?? "") || undefined,
   });
 
   if (!validado.success) {
@@ -83,6 +85,7 @@ function lerAlbum(formData: FormData) {
   return {
     titulo: String(formData.get("titulo") ?? "").trim(),
     anoLancamento: ano ? Number(ano) : undefined,
+    capa: String(formData.get("capa") ?? "") || undefined,
   };
 }
 

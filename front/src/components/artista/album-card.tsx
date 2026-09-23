@@ -36,8 +36,19 @@ export function AlbumCard({ album }: { album: AlbumResumo }) {
 
   return (
     <article className="flex items-center gap-3 rounded-lg border border-border bg-superficie p-3">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-marca/10">
-        <Disc3 className="size-5 text-marca dark:text-marca-clara" aria-hidden="true" />
+      <span className="relative size-12 shrink-0 overflow-hidden rounded-md">
+        {album.capa ? (
+          // base64: o next/image nao otimiza data URI
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={album.capa} alt="" className="size-full object-cover" />
+        ) : (
+          <span className="flex size-full items-center justify-center bg-marca/10">
+            <Disc3
+              className="size-5 text-marca dark:text-marca-clara"
+              aria-hidden="true"
+            />
+          </span>
+        )}
       </span>
 
       <div className="min-w-0 flex-1">

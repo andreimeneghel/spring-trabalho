@@ -9,7 +9,7 @@ import type { EstadoPlaylist } from "@/app/(app)/playlists/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SeletorCapa } from "./seletor-capa";
+import { SeletorImagem } from "@/components/comum/seletor-imagem";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,11 @@ export function PlaylistForm({
         </p>
       )}
 
-      <SeletorCapa valorInicial={playlist?.capa} />
+      <SeletorImagem
+        name="capa"
+        valorInicial={playlist?.capa}
+        rotulo="Capa"
+      />
 
       <div className="space-y-2">
         <Label htmlFor="nome">Nome</Label>

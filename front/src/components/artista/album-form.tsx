@@ -3,9 +3,10 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Disc3 } from "lucide-react";
 
 import type { EstadoForm } from "@/app/(app)/artista/actions";
+import { SeletorImagem } from "@/components/comum/seletor-imagem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,13 @@ export function AlbumForm({
           {estado.erro}
         </p>
       )}
+
+      <SeletorImagem
+        name="capa"
+        valorInicial={album?.capa}
+        rotulo="Capa do álbum"
+        Icone={Disc3}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="titulo">Título</Label>

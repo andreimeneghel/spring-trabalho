@@ -4,6 +4,7 @@ import com.soundhub.artista.dto.AlbumDetalheDTO;
 import com.soundhub.artista.dto.AlbumRequestDTO;
 import com.soundhub.artista.dto.AlbumResumoDTO;
 import com.soundhub.artista.entity.Album;
+import com.soundhub.musica.repository.MusicaRepository;
 import com.soundhub.artista.entity.Artista;
 import com.soundhub.artista.repository.AlbumRepository;
 import com.soundhub.artista.repository.ArtistaRepository;
@@ -34,6 +35,7 @@ public class AlbumService {
     private static final int ANO_MINIMO = 1900;
 
     private final AlbumRepository albumRepository;
+    private final MusicaRepository musicaRepository;
     private final ArtistaRepository artistaRepository;
 
     // ===== Leitura =====
@@ -83,6 +85,7 @@ public class AlbumService {
         Album album = Album.builder()
                 .titulo(titulo)
                 .anoLancamento(dto.anoLancamento())
+                .capa(normalizarImagem(dto.capa()))
                 .artista(artista)
                 .build();
 
@@ -106,6 +109,7 @@ public class AlbumService {
 
         album.setTitulo(titulo);
         album.setAnoLancamento(dto.anoLancamento());
+        album.setCapa(normalizarImagem(dto.capa()));
         log.info("Album atualizado: id={}", id);
 
         return AlbumDetalheDTO.from(albumRepository.save(album), albumRepository.contarMusicas(id));
@@ -119,6 +123,10 @@ public class AlbumService {
     public void excluir(Long id, Usuario logado) {
         Album album = buscarEntidade(id);
         validarDono(album, logado);
+
+        // as musicas ficam sem album, nao sao apagadas junto
+        musicaRepository.desvincularDoAlbum(id);
+
         albumRepository.delete(album);
         log.info("Album excluido: id={}", id);
     }
@@ -145,6 +153,14 @@ public class AlbumService {
     }
 
     /** O @Min do DTO cobre o piso; o teto depende do ano de hoje, entao fica aqui. */
+    /** String vazia vinda do formulario vira null, para nao gravar lixo no banco. */
+    private String normalizarImagem(String imagem) {
+        if (imagem == null || imagem.isBlank()) {
+            return null;
+        }
+        return imagem;
+    }
+
     private void validarAno(Integer ano) {
         if (ano == null) {
             return;

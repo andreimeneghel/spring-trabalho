@@ -62,25 +62,48 @@ export default async function ArtistaPage() {
 
   return (
     <>
-      <CabecalhoPagina
-        titulo={perfil.nomeArtistico}
-        descricao={`${perfil.totalAlbuns} ${perfil.totalAlbuns === 1 ? "álbum" : "álbuns"} · ${perfil.totalMusicas} ${perfil.totalMusicas === 1 ? "música" : "músicas"}`}
-        acao={
-          <div className="flex items-center gap-2">
-            <Button asChild>
-              <Link href="/artista/albuns/novo">
-                <Plus className="size-4" />
-                Novo álbum
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" asChild aria-label="Editar perfil">
-              <Link href="/artista/editar">
-                <Pencil className="size-4" />
-              </Link>
-            </Button>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <span className="relative size-16 shrink-0 overflow-hidden rounded-full">
+            {perfil.foto ? (
+              // base64: o next/image nao otimiza data URI
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={perfil.foto} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="flex size-full items-center justify-center bg-gradient-to-br from-marca/25 to-marca/5">
+                <Mic2
+                  className="size-7 text-marca dark:text-marca-clara"
+                  aria-hidden="true"
+                />
+              </span>
+            )}
+          </span>
+
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {perfil.nomeArtistico}
+            </h1>
+            <p className="text-sm text-texto-suave">
+              {perfil.totalAlbuns} {perfil.totalAlbuns === 1 ? "álbum" : "álbuns"} ·{" "}
+              {perfil.totalMusicas} {perfil.totalMusicas === 1 ? "música" : "músicas"}
+            </p>
           </div>
-        }
-      />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link href="/artista/albuns/novo">
+              <Plus className="size-4" />
+              Novo álbum
+            </Link>
+          </Button>
+          <Button variant="ghost" size="icon" asChild aria-label="Editar perfil">
+            <Link href="/artista/editar">
+              <Pencil className="size-4" />
+            </Link>
+          </Button>
+        </div>
+      </div>
 
       {perfil.biografia && (
         <p className="mb-8 max-w-prose text-sm leading-relaxed text-texto-suave">
