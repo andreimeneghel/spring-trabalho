@@ -69,6 +69,27 @@ export const senhaSchema = z
     path: ["novaSenha"],
   });
 
+export const artistaSchema = z.object({
+  nomeArtistico: z
+    .string()
+    .min(1, "O nome artístico é obrigatório")
+    .max(100, "Máximo de 100 caracteres"),
+  biografia: z.string().max(1000, "Máximo de 1000 caracteres").optional(),
+});
+
+export const albumSchema = z.object({
+  titulo: z.string().min(1, "O título é obrigatório").max(150, "Máximo de 150 caracteres"),
+  anoLancamento: z
+    .number()
+    .int("Informe um ano válido")
+    .min(1900, "O ano deve ser a partir de 1900")
+    .max(new Date().getFullYear(), "O ano não pode ser no futuro")
+    .optional(),
+});
+
+export type ArtistaInput = z.infer<typeof artistaSchema>;
+export type AlbumInput = z.infer<typeof albumSchema>;
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type PlaylistInput = z.infer<typeof playlistSchema>;

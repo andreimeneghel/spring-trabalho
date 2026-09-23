@@ -14,11 +14,12 @@ export default async function AppLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   // Se o token expirou, comGuarda derruba a sessão e manda para o login
   const usuario = await comGuarda(usuarioLogado);
+  const ehArtista = usuario.tipo === "ARTISTA";
 
   return (
     <div className="flex min-h-dvh">
       {/* Sidebar do desktop, com botao de recolher */}
-      <Sidebar />
+      <Sidebar ehArtista={ehArtista} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/*
@@ -28,7 +29,7 @@ export default async function AppLayout({
         */}
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-sm lg:hidden">
           <div className="flex items-center gap-2">
-            <SidebarMobile />
+            <SidebarMobile ehArtista={ehArtista} />
             <Link href="/playlists">
               <LogoComNome altura={36} />
             </Link>

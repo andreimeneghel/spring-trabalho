@@ -32,20 +32,27 @@ export function LoginForm() {
     loginAction,
     {},
   );
-  const [segundosRestantes, setSegundosRestantes] = useState(0);
+  /*
+    Guardamos o instante em que o bloqueio acaba e derivamos os segundos a cada
+    tique. Assim o efeito nunca chama setState direto no corpo — o React 19
+    acusa isso como erro — e a contagem nao atrasa se a aba ficar em segundo
+    plano, porque e sempre recalculada a partir do relogio.
+  */
+  const [agora, setAgora] = useState(() => Date.now());
+  const fimDoBloqueio =
+    estado.segundosRestantes && estado.recebidoEm
+      ? estado.recebidoEm + estado.segundosRestantes * 1000
+      : 0;
+  const segundosRestantes = fimDoBloqueio
+    ? Math.max(0, Math.ceil((fimDoBloqueio - agora) / 1000))
+    : 0;
 
   useEffect(() => {
-    if (!estado.segundosRestantes) {
-      return;
-    }
+    if (!fimDoBloqueio) return;
 
-    setSegundosRestantes(estado.segundosRestantes);
-    const intervalo = window.setInterval(() => {
-      setSegundosRestantes((atual) => Math.max(0, atual - 1));
-    }, 1000);
-
+    const intervalo = window.setInterval(() => setAgora(Date.now()), 500);
     return () => window.clearInterval(intervalo);
-  }, [estado.segundosRestantes]);
+  }, [fimDoBloqueio]);
 
   return (
     <form action={formAction} className="space-y-5" noValidate>

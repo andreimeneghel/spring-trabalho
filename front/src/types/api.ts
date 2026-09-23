@@ -88,7 +88,35 @@ export interface ErroResponse {
   campos?: Record<string, string>;
 }
 
-// ===== Entidades ainda em construcao (Douglas e Gustavo) =====
+// ===== Artista e Album (Gustavo) =====
+
+export interface ArtistaResumo {
+  id: number;
+  nomeArtistico: string;
+  biografia: string | null;
+  usuarioId: number;
+  usuarioNome: string;
+}
+
+export interface ArtistaDetalhe extends ArtistaResumo {
+  totalAlbuns: number;
+  totalMusicas: number;
+  albuns: AlbumResumo[];
+}
+
+export interface AlbumResumo {
+  id: number;
+  titulo: string;
+  anoLancamento: number | null;
+  artistaId: number;
+  artistaNome: string;
+}
+
+export interface AlbumDetalhe extends AlbumResumo {
+  totalMusicas: number;
+}
+
+// ===== Entidades ainda em construcao (Douglas) =====
 
 export interface Musica {
   id: number;

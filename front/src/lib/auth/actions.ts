@@ -10,7 +10,13 @@ const API_URL = process.env.API_URL ?? "http://localhost:8080";
 export interface EstadoFormulario {
   erro?: string;
   campos?: Record<string, string>;
+  /** Segundos de bloqueio depois de errar a senha vezes demais (429). */
   segundosRestantes?: number;
+  /**
+   * Quando a resposta chegou (epoch ms). O cliente usa isso para calcular a
+   * contagem regressiva a partir do relogio, em vez de decrementar um contador.
+   */
+  recebidoEm?: number;
 }
 
 /** Chama /auth/* sem passar pelo apiFetch, porque aqui ainda nao existe token. */
@@ -78,6 +84,7 @@ export async function loginAction(
       erro: resultado.erro,
       campos: resultado.campos,
       segundosRestantes: resultado.segundosRestantes,
+      recebidoEm: Date.now(),
     };
   }
 

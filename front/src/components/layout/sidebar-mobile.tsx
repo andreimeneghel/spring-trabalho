@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function SidebarMobile() {
+export function SidebarMobile({ ehArtista = false }: { ehArtista?: boolean }) {
   const [aberto, setAberto] = useState(false);
 
   return (
@@ -33,7 +33,7 @@ export function SidebarMobile() {
         <DialogTitle className="sr-only">Navegação</DialogTitle>
         <div className="space-y-6 pt-2">
           <LogoComNome />
-          <NavLinks aoNavegar={() => setAberto(false)} />
+          <NavLinks aoNavegar={() => setAberto(false)} ehArtista={ehArtista} />
         </div>
       </DialogContent>
     </Dialog>

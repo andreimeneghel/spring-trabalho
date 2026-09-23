@@ -44,7 +44,8 @@ cache.
 
 ```bash
 docker compose up -d      # sobe o Postgres
-./mvnw spring-boot:run    # API em http://localhost:8080
+./mvnw spring-boot:run  ou
+ mvnw.cmd spring-boot:run   # API em http://localhost:8080
 ```
 
 Swagger com todos os endpoints: `http://localhost:8080/swagger-ui.html`

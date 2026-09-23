@@ -47,7 +47,7 @@ const store = {
   },
 };
 
-export function Sidebar() {
+export function Sidebar({ ehArtista = false }: { ehArtista?: boolean }) {
   const recolhida = useSyncExternalStore(
     store.inscrever,
     store.ler,
@@ -72,7 +72,7 @@ export function Sidebar() {
           {recolhida ? <Logo tamanho={34} /> : <LogoComNome altura={56} />}
         </Link>
 
-        <NavLinks recolhida={recolhida} />
+        <NavLinks recolhida={recolhida} ehArtista={ehArtista} />
       </div>
 
       {!recolhida && (

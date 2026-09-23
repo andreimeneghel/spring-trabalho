@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, ListMusic, Star, User } from "lucide-react";
+import { Compass, ListMusic, Mic2, Star, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,8 @@ const LINKS = [
   { href: "/playlists", rotulo: "Minhas playlists", Icone: ListMusic },
   { href: "/descobrir", rotulo: "Descobrir", Icone: Compass },
   { href: "/avaliacoes", rotulo: "Minhas avaliações", Icone: Star },
+  /** So aparece para quem tem conta de ARTISTA. */
+  { href: "/artista", rotulo: "Área do artista", Icone: Mic2, soArtista: true },
   { href: "/perfil", rotulo: "Perfil", Icone: User },
 ];
 
@@ -17,18 +19,21 @@ export function NavLinks({
   aoNavegar,
   /** Na sidebar recolhida mostra so o icone, com o rotulo no hover. */
   recolhida = false,
+  ehArtista = false,
 }: {
   aoNavegar?: () => void;
   recolhida?: boolean;
+  ehArtista?: boolean;
 }) {
   const pathname = usePathname();
+  const links = LINKS.filter((l) => !l.soArtista || ehArtista);
 
   return (
     <nav
       className={cn(recolhida ? "space-y-2" : "space-y-1")}
       aria-label="Navegação principal"
     >
-      {LINKS.map(({ href, rotulo, Icone }) => {
+      {links.map(({ href, rotulo, Icone }) => {
         const ativo = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
