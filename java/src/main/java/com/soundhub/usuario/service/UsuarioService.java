@@ -1,8 +1,5 @@
 package com.soundhub.usuario.service;
 
-import com.soundhub.artista.entity.Artista;
-import com.soundhub.avaliacao.entity.Avaliacao;
-import com.soundhub.playlist.entity.Playlist;
 import com.soundhub.usuario.entity.Usuario;
 import com.soundhub.usuario.repository.UsuarioRepository;
 
@@ -43,7 +40,7 @@ public class UsuarioService {
         return UsuarioResponseDTO.from(buscarEntidade(id));
     }
 
-    /** Para os outros services (Playlist, Avaliacao, Artista...) buscarem o usuario. */
+    /** Para os outros services buscarem o usuario. */
     @Transactional(readOnly = true)
     public Usuario buscarEntidade(Long id) {
         return usuarioRepository.findById(id)
