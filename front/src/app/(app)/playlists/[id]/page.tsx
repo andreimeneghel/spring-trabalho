@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api/errors";
 import { comGuarda } from "@/lib/api/guard";
 import { buscarPlaylist } from "@/lib/api/playlists";
-import { catalogoEhMock, listarMusicas } from "@/lib/api/musicas";
+import { listarMusicas } from "@/lib/api/musicas";
 import { usuarioLogado } from "@/lib/api/usuarios";
 import { contarMusicas, formatarData, formatarDuracaoLonga } from "@/lib/utils/formato";
 
@@ -41,7 +41,8 @@ export default async function PlaylistDetalhePage({ params }: Props) {
       throw erro;
     }),
     comGuarda(usuarioLogado),
-    listarMusicas().catch(() => []),
+    // o catalogo nao pode derrubar a pagina da playlist se a chamada falhar
+    comGuarda(listarMusicas).catch(() => []),
   ]);
 
   const ehDono = playlist.donoId === usuario.id;
@@ -99,7 +100,6 @@ export default async function PlaylistDetalhePage({ params }: Props) {
               playlistId={playlist.id}
               catalogo={catalogo}
               jaNaPlaylist={idsNaPlaylist}
-              ehMock={catalogoEhMock()}
             />
             <Button variant="ghost" size="icon" asChild aria-label="Editar playlist">
               <Link href={`/playlists/${playlist.id}/editar`}>

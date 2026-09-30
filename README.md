@@ -111,9 +111,10 @@ npm run dev
 
 O front sobe em `http://localhost:3001`.
 
-> Enquanto os endpoints de Musica nao existirem, deixe `MOCK_MUSICAS=true` no `.env.local`: a
-> tela de adicionar musica usa um catalogo de exemplo. Troque para `false` quando a parte do
-> Douglas estiver pronta.
+> O `.env.local` so precisa de `API_URL` quando a API nao estiver em
+> `http://localhost:8080` (o valor padrao). A variavel `MOCK_MUSICAS`, que ligava um catalogo
+> de exemplo enquanto os endpoints de Musica nao existiam, **nao e mais usada** — pode apagar
+> a linha se ela ainda estiver no seu arquivo.
 
 ### 5. Rodar os testes
 
@@ -152,7 +153,11 @@ java/src/main/java/com/soundhub/
 ├── artista/                     # Artista e Album (Gustavo)
 │   └── controller/  service/  repository/  entity/  dto/
 ├── musica/                      # Musica e Categoria (Douglas)
-│   └── repository/  entity/
+│   ├── controller/MusicaController.java, CategoriaController.java
+│   ├── service/MusicaService.java, CategoriaService.java
+│   ├── repository/MusicaRepository.java, CategoriaRepository.java
+│   ├── entity/Musica.java, Categoria.java
+│   └── dto/
 ├── playlist/                    # Playlist (Luiz Fellipe)
 │   ├── controller/PlaylistController.java
 │   ├── service/PlaylistService.java
@@ -175,7 +180,8 @@ java/src/main/resources/
     ├── V3__create_playlist_avaliacao.sql
     ├── V4__add_foto_usuario.sql
     ├── V5__add_capa_playlist.sql
-    └── V6__add_foto_artista_capa_album.sql
+    ├── V6__add_foto_artista_capa_album.sql
+    └── V7__seed_categoria.sql
 ```
 
 Duas observacoes sobre a estrutura:
@@ -184,9 +190,9 @@ Duas observacoes sobre a estrutura:
   nao existe uma entidade `Auth` para persistir. O `AuthService` trabalha em cima de `Usuario`
   e usa o `UsuarioRepository`, que ficam no modulo `usuario/`. Criar um repositorio proprio ali
   seria duplicar o acesso a mesma tabela.
-- **`musica/` ainda so tem `entity/` e `repository/`.** Essas entidades foram criadas na
-  versao minima porque Playlist e Avaliacao dependem delas para compilar; o CRUD completo
-  fica com o Douglas, e as pastas ja estao reservadas. O modulo `artista/` ja esta completo.
+- **Todos os modulos estao completos.** `musica/` nasceu so com `entity/` e `repository/`
+  (Playlist e Avaliacao dependiam delas para compilar) e ganhou depois o CRUD de Musica e
+  Categoria, com as mesmas camadas dos outros modulos.
 
 ### Frontend — `front/`
 
@@ -209,6 +215,8 @@ front/src/
 │   ├── ui/                      # shadcn/ui
 │   ├── layout/                  # sidebar, menu do usuario
 │   ├── playlist/                # card, form, lista de musicas, dialogs
+│   ├── musica/                  # form, card, item do catalogo, filtro, dialogs
+│   ├── artista/                 # card e form de artista e album
 │   ├── avaliacao/               # estrelas, card de avaliacao
 │   └── comum/                   # logo, estado vazio, cabecalho
 ├── lib/
@@ -244,6 +252,9 @@ Restricoes de integridade que valem destacar:
 - `uk_playlist_usuario_nome` — o mesmo usuario nao pode ter duas playlists com o mesmo nome.
 - `uk_avaliacao_usuario_musica` — cada usuario avalia uma musica uma unica vez.
 - `ck_avaliacao_nota` — a nota so aceita valores de 1 a 5.
+- `ck_musica_duracao` — a duracao (em segundos) precisa ser maior que zero.
+- `uk_categoria_nome` — nao existem duas categorias com o mesmo nome.
+- O mesmo artista nao pode ter duas musicas com o mesmo titulo (conferido no service).
 
 ---
 
@@ -320,6 +331,31 @@ musicas; apenas o `ARTISTA` pode cadastrar albuns e musicas.
 | POST | `/albuns` | Cria album no seu perfil de artista (so ARTISTA) |
 | PUT | `/albuns/{id}` | Atualiza (so o artista dono) |
 | DELETE | `/albuns/{id}` | Exclui (so o artista dono; as musicas ficam sem album) |
+
+### Musica
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/musicas` | Lista o catalogo inteiro |
+| GET | `/musicas/busca?titulo=amanhecer` | Busca pelo titulo |
+| GET | `/musicas/minhas` | Musicas do seu perfil de artista |
+| GET | `/musicas/artista/{artistaId}` | Musicas de um artista |
+| GET | `/musicas/album/{albumId}` | Musicas de um album |
+| GET | `/musicas/categoria/{categoriaId}` | Musicas de uma categoria |
+| GET | `/musicas/{id}` | Detalhe com artista, album e categorias |
+| POST | `/musicas` | Publica no seu perfil de artista (so ARTISTA) |
+| PUT | `/musicas/{id}` | Atualiza (so o artista dono) |
+| DELETE | `/musicas/{id}` | Exclui (so o artista dono) |
+
+### Categoria
+
+| Metodo | Rota | Descricao |
+|---|---|---|
+| GET | `/categorias` | Lista em ordem alfabetica |
+| GET | `/categorias/{id}` | Detalhe com a quantidade de musicas |
+| POST | `/categorias` | Cria (so ARTISTA) |
+| PUT | `/categorias/{id}` | Renomeia (so ARTISTA) |
+| DELETE | `/categorias/{id}` | Exclui (so ARTISTA, e so se nenhuma musica usar) |
 
 ### Avaliacao
 
@@ -505,6 +541,47 @@ Content-Type: application/json
 O album nao recebe `artistaId`: ele e sempre criado no perfil de artista de quem esta
 logado. Sem perfil, volta **400**.
 
+### Cadastrar musica
+
+```http
+POST /musicas
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "titulo": "Amanhecer",
+  "duracao": 214,
+  "albumId": 1,
+  "categoriaIds": [1, 3]
+}
+```
+
+**201 Created**
+
+```json
+{
+  "id": 1,
+  "titulo": "Amanhecer",
+  "duracao": 214,
+  "artistaId": 1,
+  "artistaNome": "Banda do Morro",
+  "artistaFoto": null,
+  "albumId": 1,
+  "albumTitulo": "Raizes",
+  "albumCapa": null,
+  "albumAnoLancamento": 2024,
+  "categorias": [
+    { "id": 3, "nome": "MPB" },
+    { "id": 1, "nome": "Rock" }
+  ]
+}
+```
+
+A `duracao` vai em **segundos** (de 1 a 7200). O `artistaId` nao vai no corpo: a musica e
+sempre publicada no perfil de artista de quem esta logado. O `albumId` e opcional — sem ele a
+musica e um single —, mas quando vem precisa ser de um album do proprio artista (senao
+**400**). Os ids em `categoriaIds` (no maximo 5) precisam existir em `/categorias`.
+
 ### Avaliar uma musica
 
 ```http
@@ -656,6 +733,21 @@ refeita para nao ficar com buracos na numeracao.
 
 **Playlist privada:** a playlist tem a flag `publica`. Quando esta `false`, so o dono consegue
 abrir e ela nao aparece nas listagens dos outros usuarios.
+
+**Categoria e uma tabela de apoio compartilhada:** ela nao tem dono, e a mesma categoria vale
+para as musicas de qualquer artista. Por isso a permissao de escrita e por tipo de usuario (so
+`ARTISTA`) e nao por titularidade, e a exclusao e bloqueada enquanto alguma musica ainda usar a
+categoria — apagar levaria junto a marcacao das musicas de outras pessoas. A migration
+`V7__seed_categoria.sql` ja deixa doze categorias cadastradas.
+
+**Musica x Categoria e um `@ManyToMany` simples**, sem entidade de ligacao: a tabela
+`musica_categoria` nao guarda nenhum dado proprio — o oposto de `playlist_musica`, que precisou
+virar entidade por causa da coluna `ordem`.
+
+**Excluir uma musica** tira ela das playlists de todos os usuarios (refazendo a ordem, para nao
+ficar buraco na numeracao) e apaga as avaliacoes que ela recebeu. As FKs no banco ja sao
+`ON DELETE CASCADE`, mas o Hibernate nao conhece essas cascatas, entao a limpeza tambem e feita
+no `MusicaService`.
 
 **Avaliacao:** cada usuario avalia uma musica uma unica vez — para mudar de ideia, usa-se o
 `PUT`, que atualiza a nota e preenche o campo `atualizadaEm`. Um artista nao pode avaliar a

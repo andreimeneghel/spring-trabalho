@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import * as api from "@/lib/api/artistas";
+import * as apiMusicas from "@/lib/api/musicas";
 import { ApiError, mensagemDeErro } from "@/lib/api/errors";
-import { albumSchema, artistaSchema } from "@/lib/schemas";
+import { albumSchema, artistaSchema, musicaSchema } from "@/lib/schemas";
 
 export interface EstadoForm {
   erro?: string;
@@ -142,5 +143,89 @@ export async function excluirAlbumAction(id: number) {
   }
 
   revalidatePath("/artista");
+  return { ok: true as const };
+}
+
+// ===== Musica =====
+
+/**
+ * O formulario pede minutos e segundos separados (mais facil de digitar do que
+ * "214"); a API recebe sempre o total em segundos.
+ */
+function lerMusica(formData: FormData) {
+  const minutos = String(formData.get("duracaoMin") ?? "").trim();
+  const segundos = String(formData.get("duracaoSeg") ?? "").trim();
+  const album = String(formData.get("albumId") ?? "").trim();
+
+  return {
+    titulo: String(formData.get("titulo") ?? "").trim(),
+    duracao:
+      minutos || segundos
+        ? Number(minutos || 0) * 60 + Number(segundos || 0)
+        : undefined,
+    albumId: album ? Number(album) : undefined,
+    categoriaIds: formData.getAll("categoriaIds").map((id) => Number(id)),
+  };
+}
+
+export async function criarMusicaAction(
+  _anterior: EstadoForm,
+  formData: FormData,
+): Promise<EstadoForm> {
+  const validado = musicaSchema.safeParse(lerMusica(formData));
+  if (!validado.success) {
+    return { campos: errosDoSchema(validado.error.issues) };
+  }
+
+  try {
+    await apiMusicas.criarMusica(validado.data);
+  } catch (erro) {
+    if (erro instanceof ApiError) {
+      return { erro: erro.message, campos: erro.campos };
+    }
+    return { erro: mensagemDeErro(erro) };
+  }
+
+  revalidatePath("/artista");
+  revalidatePath("/descobrir");
+  redirect("/artista");
+}
+
+export async function atualizarMusicaAction(
+  id: number,
+  _anterior: EstadoForm,
+  formData: FormData,
+): Promise<EstadoForm> {
+  const validado = musicaSchema.safeParse(lerMusica(formData));
+  if (!validado.success) {
+    return { campos: errosDoSchema(validado.error.issues) };
+  }
+
+  try {
+    await apiMusicas.atualizarMusica(id, validado.data);
+  } catch (erro) {
+    if (erro instanceof ApiError) {
+      return { erro: erro.message, campos: erro.campos };
+    }
+    return { erro: mensagemDeErro(erro) };
+  }
+
+  revalidatePath("/artista");
+  revalidatePath("/descobrir");
+  revalidatePath(`/musicas/${id}`);
+  redirect("/artista");
+}
+
+export async function excluirMusicaAction(id: number) {
+  try {
+    await apiMusicas.excluirMusica(id);
+  } catch (erro) {
+    return { ok: false as const, erro: mensagemDeErro(erro) };
+  }
+
+  // a musica sai das playlists de todo mundo: as telas de playlist tambem mudam
+  revalidatePath("/artista");
+  revalidatePath("/descobrir");
+  revalidatePath("/playlists");
   return { ok: true as const };
 }
