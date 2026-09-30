@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Disc3, Mic2, Pencil, Plus } from "lucide-react";
+import { Disc3, Mic2, Music2, Pencil, Plus } from "lucide-react";
 
 import { AlbumCard } from "@/components/artista/album-card";
 import { CabecalhoPagina } from "@/components/comum/cabecalho-pagina";
 import { EstadoVazio } from "@/components/comum/estado-vazio";
+import { MusicaCard } from "@/components/musica/musica-card";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api/errors";
 import { comGuarda } from "@/lib/api/guard";
 import { meuPerfilArtista } from "@/lib/api/artistas";
+import { listarMinhasMusicas } from "@/lib/api/musicas";
 import { usuarioLogado } from "@/lib/api/usuarios";
 import type { ArtistaDetalhe } from "@/types/api";
 
@@ -60,6 +62,8 @@ export default async function ArtistaPage() {
     );
   }
 
+  const musicas = await comGuarda(listarMinhasMusicas);
+
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -92,6 +96,12 @@ export default async function ArtistaPage() {
 
         <div className="flex items-center gap-2">
           <Button asChild>
+            <Link href="/artista/musicas/nova">
+              <Plus className="size-4" />
+              Nova música
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
             <Link href="/artista/albuns/novo">
               <Plus className="size-4" />
               Novo álbum
@@ -130,6 +140,27 @@ export default async function ArtistaPage() {
             <AlbumCard key={album.id} album={album} />
           ))}
         </div>
+      )}
+
+      <h2 className="mb-3 mt-8 font-bold">Músicas</h2>
+
+      {musicas.length === 0 ? (
+        <EstadoVazio
+          Icone={Music2}
+          titulo="Nenhuma música publicada"
+          descricao="Publique sua primeira música. Ela pode entrar em um álbum seu ou ficar como single."
+          acao={
+            <Button asChild size="sm">
+              <Link href="/artista/musicas/nova">Publicar música</Link>
+            </Button>
+          }
+        />
+      ) : (
+        <ul className="divide-y divide-border rounded-lg border border-border bg-superficie">
+          {musicas.map((musica) => (
+            <MusicaCard key={musica.id} musica={musica} />
+          ))}
+        </ul>
       )}
     </>
   );

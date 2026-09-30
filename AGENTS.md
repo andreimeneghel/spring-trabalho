@@ -31,13 +31,12 @@ spring-trabalho/
 |---|---|---|
 | Andrei | `usuario/`, `auth/` | pronto |
 | Gustavo | `artista/` (Artista, Album) | pronto, com testes |
-| Douglas | `musica/` (Musica, Categoria) |
+| Douglas | `musica/` (Musica, Categoria) | pronto, com testes |
 | Luiz Fellipe | `playlist/`, `avaliacao/` | pronto, com testes |
 
-**Importante:** `musica/` tem apenas entity e repository porque Playlist e Avaliação
-dependem dele para compilar. O CRUD completo é responsabilidade do Douglas — as pastas
-`controller/`, `service/` e `dto/` já estão reservadas com um `LEIA-ME.md` dentro.
-**Não implemente a parte dele sem combinar antes.**
+Todos os módulos estão completos. `musica/` nasceu só com entity e repository — Playlist e
+Avaliação dependiam dele para compilar — e ganhou depois o CRUD de Música e Categoria, com as
+mesmas camadas dos outros módulos.
 
 ---
 
@@ -51,7 +50,7 @@ Nunca conclua uma tarefa sem executar. Compilar não é testar.
 
 ```bash
 cd java
-./mvnw test                    # 25 testes; usa H2, não precisa de Docker
+./mvnw test                    # 43 testes; usa H2, não precisa de Docker
 ./mvnw spring-boot:run         # sobe de verdade contra o Postgres
 ```
 
@@ -166,7 +165,7 @@ java/src/main/java/com/soundhub/
 ├── auth/         controller/  service/  dto/
 ├── usuario/      controller/  service/  repository/  entity/  dto/
 ├── artista/      controller/  service/  repository/  entity/  dto/   (Gustavo)
-├── musica/       repository/  entity/         (Douglas)
+├── musica/       controller/  service/  repository/  entity/  dto/   (Douglas)
 ├── playlist/     controller/  service/  repository/  entity/  dto/
 ├── avaliacao/    controller/  service/  repository/  entity/  dto/
 └── common/       config/  exception/  security/  util/
@@ -217,7 +216,10 @@ V1__create_usuario.sql
 V2__create_artista_album_musica_categoria.sql
 V3__create_playlist_avaliacao.sql
 V4__add_foto_usuario.sql
-V5__sua_mudanca_aqui.sql      ← próxima
+V5__add_capa_playlist.sql
+V6__add_foto_artista_capa_album.sql
+V7__seed_categoria.sql
+V8__sua_mudanca_aqui.sql      ← próxima
 ```
 
 Depois de criar a migration, rode `./mvnw test`: o `validate` compara o mapeamento das
@@ -227,9 +229,12 @@ entidades com o schema e falha se divergirem.
 
 `PlaylistAvaliacaoIntegrationTest` tem 11 testes cobrindo ordem das músicas, reordenação ao
 remover do meio, permissões, duplicidade e cálculo de média. `ArtistaAlbumIntegrationTest`
-tem 13 cobrindo perfil único por usuário, nomes duplicados, permissão de dono, ano de
-lançamento e exclusão em cascata bloqueada. Os dois rodam com H2 em memória
-(`application-test.yml`), então não precisam de Docker.
+tem 14 cobrindo perfil único por usuário, nomes duplicados, permissão de dono, ano de
+lançamento e exclusão em cascata bloqueada. `MusicaCategoriaIntegrationTest` tem 17 cobrindo
+título único por artista, álbum de outro artista, categorias inexistentes, filtro por
+categoria, permissão de dono, exclusão limpando playlists e avaliações, e categoria em uso
+barrando a exclusão. Todos rodam com H2 em memória (`application-test.yml`), então não
+precisam de Docker.
 
 **Ao adicionar lógica de negócio, adicione teste.** Use esse arquivo como modelo.
 

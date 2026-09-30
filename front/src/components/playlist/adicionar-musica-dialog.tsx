@@ -16,18 +16,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { formatarDuracao } from "@/lib/utils/formato";
-import type { Musica } from "@/types/api";
+import type { MusicaResumo } from "@/types/api";
 
 export function AdicionarMusicaDialog({
   playlistId,
   catalogo,
   jaNaPlaylist,
-  ehMock,
 }: {
   playlistId: number;
-  catalogo: Musica[];
+  catalogo: MusicaResumo[];
   jaNaPlaylist: number[];
-  ehMock: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
   const [termo, setTermo] = useState("");
@@ -41,11 +39,11 @@ export function AdicionarMusicaDialog({
         (m) =>
           !busca ||
           m.titulo.toLowerCase().includes(busca) ||
-          (m.artista ?? "").toLowerCase().includes(busca),
+          m.artistaNome.toLowerCase().includes(busca),
       );
   }, [catalogo, jaNaPlaylist, termo]);
 
-  function adicionar(musica: Musica) {
+  function adicionar(musica: MusicaResumo) {
     startTransition(async () => {
       const resultado = await adicionarMusicaAction(playlistId, musica.id);
       if (resultado.ok) {
@@ -69,9 +67,7 @@ export function AdicionarMusicaDialog({
         <DialogHeader>
           <DialogTitle>Adicionar música</DialogTitle>
           <DialogDescription>
-            {ehMock
-              ? "Catalogo de exemplo — os endpoints de música ainda estao em construcao."
-              : "Escolha uma música do catalogo."}
+            Escolha uma música do catálogo.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +88,7 @@ export function AdicionarMusicaDialog({
               <p className="py-8 text-center text-sm text-texto-suave">
                 {termo
                   ? "Nenhuma música encontrada."
-                  : "Todas as músicas do catalogo já estao nesta playlist."}
+                  : "Todas as músicas do catálogo já estão nesta playlist."}
               </p>
             ) : (
               disponiveis.map((musica) => (
@@ -105,11 +101,10 @@ export function AdicionarMusicaDialog({
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">{musica.titulo}</p>
-                    {musica.artista && (
-                      <p className="truncate text-xs text-texto-suave">
-                        {musica.artista}
-                      </p>
-                    )}
+                    <p className="truncate text-xs text-texto-suave">
+                      {musica.artistaNome}
+                      {musica.albumTitulo && ` · ${musica.albumTitulo}`}
+                    </p>
                   </div>
                   <span className="shrink-0 text-xs tabular-nums text-texto-fraco">
                     {formatarDuracao(musica.duracao)}

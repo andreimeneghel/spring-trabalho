@@ -1,11 +1,16 @@
 package com.soundhub.musica.entity;
 
-import com.soundhub.artista.entity.Artista;
-
 import jakarta.persistence.*;
 import lombok.*;
 
-/** Estrutura base (parte do Douglas). Ver comentario em {@link Artista}. */
+/**
+ * Categoria musical (parte do Douglas).
+ *
+ * Tabela de apoio compartilhada: nao tem dono, e a mesma categoria e usada pelas
+ * musicas de qualquer artista. O lado inverso do N:N (as musicas da categoria)
+ * nao e mapeado de proposito — quem precisa contar usa
+ * {@code CategoriaRepository.contarMusicas}, evitando carregar a colecao inteira.
+ */
 @Entity
 @Table(name = "categoria")
 @Getter

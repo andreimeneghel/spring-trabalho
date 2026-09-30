@@ -1,47 +1,92 @@
 import "server-only";
 
 import { apiFetch } from "./client";
-import type { Categoria, Musica } from "@/types/api";
+import type {
+  Categoria,
+  CategoriaDetalhe,
+  MusicaDetalhe,
+  MusicaResumo,
+} from "@/types/api";
 
-/**
- * Musica e Categoria ainda estao sendo construidas pelo Douglas.
- * Enquanto os endpoints nao existem, MOCK_MUSICAS=true no .env.local faz o front
- * trabalhar com dados de exemplo — nenhum componente precisa mudar depois.
- *
- * Observacao: POST /playlists/{id}/musicas JA funciona no backend; ele so precisa
- * de um musicaId que exista no banco.
- */
-const USAR_MOCK = process.env.MOCK_MUSICAS === "true";
-
-const MUSICAS_EXEMPLO: Musica[] = [
-  { id: 1, titulo: "Amanhecer", duracao: 214, artistaId: 1, albumId: 1, artista: "Marina Dias" },
-  { id: 2, titulo: "Rua de Baixo", duracao: 187, artistaId: 1, albumId: 1, artista: "Marina Dias" },
-  { id: 3, titulo: "Vento Sul", duracao: 243, artistaId: 2, albumId: 2, artista: "Coletivo Norte" },
-  { id: 4, titulo: "Madrugada", duracao: 196, artistaId: 2, albumId: 2, artista: "Coletivo Norte" },
-  { id: 5, titulo: "Serra Acima", duracao: 168, artistaId: 3, albumId: null, artista: "Trio Catarina" },
-  { id: 6, titulo: "Quase La", duracao: 225, artistaId: 3, albumId: null, artista: "Trio Catarina" },
-];
-
-const CATEGORIAS_EXEMPLO: Categoria[] = [
-  { id: 1, nome: "MPB" },
-  { id: 2, nome: "Rock" },
-  { id: 3, nome: "Eletronica" },
-];
-
-export async function listarMusicas(): Promise<Musica[]> {
-  if (USAR_MOCK) return MUSICAS_EXEMPLO;
-  return apiFetch<Musica[]>("/musicas", { cache: "no-store" });
+export interface MusicaInput {
+  titulo: string;
+  /** Em segundos. */
+  duracao: number;
+  /** Omitido ou null = single, sem album. O album tem que ser do proprio artista. */
+  albumId?: number | null;
+  /** Ids de categorias ja cadastradas. No maximo 5. */
+  categoriaIds?: number[];
 }
 
-export async function buscarMusica(id: number): Promise<Musica | null> {
-  if (USAR_MOCK) return MUSICAS_EXEMPLO.find((m) => m.id === id) ?? null;
-  return apiFetch<Musica>(`/musicas/${id}`, { cache: "no-store" });
+export interface CategoriaInput {
+  nome: string;
 }
 
-export async function listarCategorias(): Promise<Categoria[]> {
-  if (USAR_MOCK) return CATEGORIAS_EXEMPLO;
-  return apiFetch<Categoria[]>("/categorias", { cache: "no-store" });
-}
+/** Dado autenticado nao vai para cache compartilhado. */
+const SEM_CACHE = { cache: "no-store" as const };
 
-/** Diz se o catalogo esta em modo de exemplo, para a UI avisar o usuario. */
-export const catalogoEhMock = () => USAR_MOCK;
+// ===== Musica =====
+
+export const listarMusicas = () =>
+  apiFetch<MusicaResumo[]>("/musicas", SEM_CACHE);
+
+export const buscarMusicasPorTitulo = (titulo: string) =>
+  apiFetch<MusicaResumo[]>(
+    `/musicas/busca?titulo=${encodeURIComponent(titulo)}`,
+    SEM_CACHE,
+  );
+
+/** Musicas do perfil de artista do usuario logado (400 se ele nao tiver perfil). */
+export const listarMinhasMusicas = () =>
+  apiFetch<MusicaResumo[]>("/musicas/minhas", SEM_CACHE);
+
+export const listarMusicasDoArtista = (artistaId: number) =>
+  apiFetch<MusicaResumo[]>(`/musicas/artista/${artistaId}`, SEM_CACHE);
+
+export const listarMusicasDoAlbum = (albumId: number) =>
+  apiFetch<MusicaResumo[]>(`/musicas/album/${albumId}`, SEM_CACHE);
+
+export const listarMusicasDaCategoria = (categoriaId: number) =>
+  apiFetch<MusicaResumo[]>(`/musicas/categoria/${categoriaId}`, SEM_CACHE);
+
+export const buscarMusica = (id: number) =>
+  apiFetch<MusicaDetalhe>(`/musicas/${id}`, SEM_CACHE);
+
+/** A musica e vinculada ao perfil de artista do usuario logado. */
+export const criarMusica = (dados: MusicaInput) =>
+  apiFetch<MusicaDetalhe>("/musicas", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  });
+
+export const atualizarMusica = (id: number, dados: MusicaInput) =>
+  apiFetch<MusicaDetalhe>(`/musicas/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  });
+
+export const excluirMusica = (id: number) =>
+  apiFetch<void>(`/musicas/${id}`, { method: "DELETE" });
+
+// ===== Categoria =====
+
+export const listarCategorias = () =>
+  apiFetch<Categoria[]>("/categorias", SEM_CACHE);
+
+export const buscarCategoria = (id: number) =>
+  apiFetch<CategoriaDetalhe>(`/categorias/${id}`, SEM_CACHE);
+
+export const criarCategoria = (dados: CategoriaInput) =>
+  apiFetch<CategoriaDetalhe>("/categorias", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  });
+
+export const atualizarCategoria = (id: number, dados: CategoriaInput) =>
+  apiFetch<CategoriaDetalhe>(`/categorias/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  });
+
+export const excluirCategoria = (id: number) =>
+  apiFetch<void>(`/categorias/${id}`, { method: "DELETE" });

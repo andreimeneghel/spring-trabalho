@@ -9,7 +9,14 @@ import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Estrutura base (parte do Douglas). Ver comentario em {@link Artista}. */
+/**
+ * Musica publicada por um artista (parte do Douglas).
+ *
+ * O album e opcional — uma musica pode ser um single. As categorias sao um N:N
+ * simples (@ManyToMany), sem entidade de ligacao, porque a tabela musica_categoria
+ * nao guarda nenhum dado proprio: e o oposto de {@code PlaylistMusica}, que
+ * precisou virar entidade por causa da coluna ordem.
+ */
 @Entity
 @Table(name = "musica")
 @Getter

@@ -90,8 +90,29 @@ export const albumSchema = z.object({
   capa: z.string().optional(),
 });
 
+export const musicaSchema = z.object({
+  titulo: z.string().min(1, "O título é obrigatório").max(150, "Máximo de 150 caracteres"),
+  // o formulario pede minutos e segundos; a API recebe o total em segundos
+  duracao: z
+    .number({ message: "Informe a duração" })
+    .int("Informe a duração em minutos e segundos")
+    .min(1, "A duração deve ser de pelo menos 1 segundo")
+    .max(7200, "A duração deve ser de no máximo 2 horas"),
+  albumId: z.number().int().positive().optional(),
+  categoriaIds: z
+    .array(z.number().int().positive())
+    .max(5, "Escolha no máximo 5 categorias")
+    .optional(),
+});
+
+export const categoriaSchema = z.object({
+  nome: z.string().min(1, "O nome é obrigatório").max(50, "Máximo de 50 caracteres"),
+});
+
 export type ArtistaInput = z.infer<typeof artistaSchema>;
 export type AlbumInput = z.infer<typeof albumSchema>;
+export type MusicaInput = z.infer<typeof musicaSchema>;
+export type CategoriaInput = z.infer<typeof categoriaSchema>;
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegistroInput = z.infer<typeof registroSchema>;

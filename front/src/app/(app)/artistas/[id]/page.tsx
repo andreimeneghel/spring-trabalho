@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Disc3, Mic2 } from "lucide-react";
+import { Disc3, Mic2, Music2 } from "lucide-react";
 
 import { EstadoVazio } from "@/components/comum/estado-vazio";
+import { MusicaItem } from "@/components/musica/musica-item";
 import { ApiError } from "@/lib/api/errors";
 import { comGuarda } from "@/lib/api/guard";
 import { buscarArtista } from "@/lib/api/artistas";
+import { listarMusicasDoArtista } from "@/lib/api/musicas";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -32,6 +34,8 @@ export default async function ArtistaPublicoPage({ params }: Props) {
       throw erro;
     },
   );
+
+  const musicas = await comGuarda(() => listarMusicasDoArtista(artistaId));
 
   const plural = (n: number, um: string, muitos: string) =>
     `${n} ${n === 1 ? um : muitos}`;
@@ -105,6 +109,23 @@ export default async function ArtistaPublicoPage({ params }: Props) {
                 </p>
               </div>
             </li>
+          ))}
+        </ul>
+      )}
+
+      <h2 className="mb-3 mt-8 font-bold">Músicas</h2>
+
+      {musicas.length === 0 ? (
+        <EstadoVazio
+          Icone={Music2}
+          titulo="Nenhuma música publicada"
+          descricao={`${artista.nomeArtistico} ainda não publicou nenhuma música.`}
+        />
+      ) : (
+        <ul className="divide-y divide-border rounded-lg border border-border bg-superficie">
+          {musicas.map((musica) => (
+            // o artista ja e o dono da pagina: a linha mostra so album e duracao
+            <MusicaItem key={musica.id} musica={musica} mostrarArtista={false} />
           ))}
         </ul>
       )}

@@ -120,18 +120,37 @@ export interface AlbumDetalhe extends AlbumResumo {
   totalMusicas: number;
 }
 
-// ===== Entidades ainda em construcao (Douglas) =====
-
-export interface Musica {
-  id: number;
-  titulo: string;
-  duracao: number;
-  artistaId: number;
-  albumId: number | null;
-  artista?: string;
-}
+// ===== Musica e Categoria (Douglas) =====
 
 export interface Categoria {
   id: number;
   nome: string;
+}
+
+/** GET /categorias/{id} e as respostas de POST/PUT: traz o uso da categoria. */
+export interface CategoriaDetalhe extends Categoria {
+  totalMusicas: number;
+}
+
+export interface MusicaResumo {
+  id: number;
+  titulo: string;
+  /** Em segundos. */
+  duracao: number;
+  artistaId: number;
+  artistaNome: string;
+  /** null quando a musica e um single, sem album. */
+  albumId: number | null;
+  albumTitulo: string | null;
+  /** Ordenadas pelo nome. Vazio quando a musica nao tem categoria. */
+  categorias: Categoria[];
+}
+
+/** GET /musicas/{id}: acrescenta as imagens e o ano do album. */
+export interface MusicaDetalhe extends MusicaResumo {
+  /** Data URI base64 (PNG ou JPG), ou null. */
+  artistaFoto: string | null;
+  /** Data URI base64 (PNG ou JPG), ou null. */
+  albumCapa: string | null;
+  albumAnoLancamento: number | null;
 }

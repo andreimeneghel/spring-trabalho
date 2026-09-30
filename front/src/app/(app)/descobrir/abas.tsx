@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Disc3, ListMusic, Mic2 } from "lucide-react";
+import { Disc3, ListMusic, Mic2, Music2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const ABAS = [
   { chave: "playlists", rotulo: "Playlists", Icone: ListMusic },
+  { chave: "musicas", rotulo: "Músicas", Icone: Music2 },
   { chave: "artistas", rotulo: "Artistas", Icone: Mic2 },
   { chave: "albuns", rotulo: "Álbuns", Icone: Disc3 },
 ] as const;

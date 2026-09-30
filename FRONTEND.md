@@ -17,10 +17,10 @@ cache.
 >    [Cache e performance](#6-cache-e-performance) explica o raciocinio; leia o aviso em
 >    destaque la.
 
-> **Escopo:** a API hoje entrega **Autenticacao, Usuario, Playlist e Avaliacao**. Os modulos de
-> **Musica, Categoria, Artista e Album** estao sendo construidos por outros integrantes. A secao
-> [Endpoints futuros](#endpoints-futuros) descreve como o front deve se preparar para eles sem
-> travar o desenvolvimento agora.
+> **Escopo:** a API entrega **Autenticacao, Usuario, Playlist, Avaliacao, Artista, Album,
+> Musica e Categoria** — todos os modulos estao no ar. A secao
+> [8](#8-musica-e-categoria-o-que-mudou) registra o que mudou no front quando Musica e
+> Categoria ficaram prontas (o catalogo de exemplo saiu) e o que ainda da para melhorar.
 
 ---
 
@@ -187,6 +187,33 @@ export interface AlbumDetalhe extends AlbumResumo {
   totalMusicas: number;
 }
 
+export interface Categoria {
+  id: number;
+  nome: string;
+}
+
+/** GET /categorias/{id} e as respostas de POST e PUT. */
+export interface CategoriaDetalhe extends Categoria {
+  totalMusicas: number;
+}
+
+export interface MusicaResumo {
+  id: number;
+  titulo: string;
+  duracao: number;            // segundos
+  artistaId: number;
+  artistaNome: string;
+  albumId: number | null;     // null = single, sem album
+  albumTitulo: string | null;
+  categorias: Categoria[];    // ordenadas pelo nome; vazio quando nao tem
+}
+
+export interface MusicaDetalhe extends MusicaResumo {
+  artistaFoto: string | null;        // data URI base64 (PNG/JPG) ou null
+  albumCapa: string | null;          // data URI base64 (PNG/JPG) ou null
+  albumAnoLancamento: number | null;
+}
+
 /** Formato unico de erro da API. */
 export interface ErroResponse {
   timestamp: string;
@@ -344,6 +371,57 @@ Regras que o front precisa respeitar:
 > artista. Se voltar `404`, mostre a tela de "criar perfil de artista" em vez de erro; se
 > voltar `200`, mostre o perfil com os albuns e o botao de novo album. Use `ArtistaDetalhe`
 > — ele ja traz os albuns, sem precisar de uma segunda chamada.
+
+#### Musica e Categoria — exige token
+
+| Metodo | Rota                             | Observacao                                                    |
+| ------ | -------------------------------- | ------------------------------------------------------------- |
+| GET    | `/musicas`                       | Catalogo inteiro, em ordem alfabetica — qualquer logado       |
+| GET    | `/musicas/busca?titulo=amanhecer`| Busca parcial no titulo, ignorando maiusculas                  |
+| GET    | `/musicas/minhas`                | Musicas do seu perfil de artista (`400` se voce nao tiver)     |
+| GET    | `/musicas/artista/{artistaId}`   | Musicas de um artista                                          |
+| GET    | `/musicas/album/{albumId}`       | Musicas de um album                                            |
+| GET    | `/musicas/categoria/{categoriaId}`| Musicas de uma categoria                                      |
+| GET    | `/musicas/{id}`                  | `MusicaDetalhe` (com foto do artista e capa do album)          |
+| POST   | `/musicas`                       | `{ titulo, duracao, albumId?, categoriaIds? }` → `201` — so ARTISTA |
+| PUT    | `/musicas/{id}`                  | Mesmo body do POST — so o artista dono                         |
+| DELETE | `/musicas/{id}`                  | `204` — so o artista dono                                      |
+| GET    | `/categorias`                    | Lista em ordem alfabetica — qualquer logado                    |
+| GET    | `/categorias/{id}`               | `CategoriaDetalhe`, com `totalMusicas`                         |
+| POST   | `/categorias`                    | `{ nome }` → `201` — so ARTISTA                                |
+| PUT    | `/categorias/{id}`               | `{ nome }` — so ARTISTA                                        |
+| DELETE | `/categorias/{id}`               | `204` — so ARTISTA                                             |
+
+Regras que o front precisa respeitar:
+
+- **Escrita so para `tipo: "ARTISTA"`** (ouvinte leva `403`) e, em musica, **so o dono**
+  altera e exclui (`403` para a musica de outro artista).
+- **A musica nao recebe `artistaId` no body**: ela e vinculada ao perfil de artista do
+  usuario logado. Sem perfil → `400` pedindo para criar o perfil antes.
+- `titulo` obrigatorio, ate 150 chars, **unico dentro do mesmo artista** (duplicado → `409`).
+- `duracao` **em segundos**, obrigatoria, de `1` a `7200` (2 h). O formulario pede minutos e
+  segundos e converte antes de enviar — o teto evita o erro classico de digitar minutos.
+- `albumId` opcional. Omitido ou `null` = single. O album precisa ser **do proprio artista**
+  (de outro → `400`) e existir (`404`).
+- `categoriaIds` opcional, **no maximo 5**, e cada id precisa existir (`404`). A musica nao
+  cria categoria nova: use `POST /categorias` antes.
+- `nome` de categoria: obrigatorio, ate 50 chars, **unico ignorando maiusculas** (`409`).
+- **Excluir categoria em uso → `400`** com a quantidade de musicas que ainda a usam.
+- **Excluir musica apaga junto** as avaliacoes dela e as entradas nas playlists de todos os
+  usuarios (a ordem das playlists afetadas e refeita, sem buracos). Confirme com
+  `AlertDialog` antes.
+- O `PUT` de musica substitui as categorias pelo que for enviado: mandar `categoriaIds`
+  vazio ou omitido **remove todas**. O formulario sempre envia a selecao atual inteira.
+
+> **Musica e Categoria — o que o front faz.** A area do artista (`/artista`) lista as musicas
+> com editar e excluir; `/artista/musicas/nova` e `/artista/musicas/[id]/editar` usam o
+> `components/musica/musica-form.tsx`. Nele, o album e um `<select>` **nativo** e as
+> categorias sao botoes que gravam `<input type="hidden" name="categoriaIds">` — o mesmo
+> motivo do switch da playlist: componente do Radix nao entra no `FormData`.
+>
+> O catalogo publico esta na aba **Musicas** do `/descobrir`, com busca por titulo e filtro
+> por categoria na URL (`?aba=musicas&q=...&categoria=...`). `/musicas/[id]` mostra o detalhe
+> com a media, as avaliacoes, o botao de avaliar e o de adicionar a uma playlist.
 
 ### Tratamento de erros
 
@@ -634,7 +712,14 @@ soundhub-web/
 │   │       │       ├── page.tsx        # detalhe
 │   │       │       ├── loading.tsx
 │   │       │       └── editar/page.tsx
-│   │       ├── descobrir/page.tsx      # busca de playlists publicas
+│   │       ├── musicas/[id]/page.tsx   # detalhe da musica (media, avaliacoes)
+│   │       ├── artista/                # area do artista: perfil, albuns e musicas
+│   │       │   ├── page.tsx
+│   │       │   ├── actions.ts          # inclui as actions de musica
+│   │       │   └── musicas/
+│   │       │       ├── nova/page.tsx
+│   │       │       └── [id]/editar/page.tsx
+│   │       ├── descobrir/page.tsx      # abas: playlists, musicas, artistas, albuns
 │   │       ├── avaliacoes/page.tsx     # "/avaliacoes/minhas"
 │   │       └── perfil/
 │   │           ├── page.tsx
@@ -651,6 +736,13 @@ soundhub-web/
 │   │   │   ├── playlist-form.tsx
 │   │   │   ├── lista-musicas.tsx
 │   │   │   └── badge-privacidade.tsx
+│   │   ├── musica/
+│   │   │   ├── musica-form.tsx         # publicar e editar (select nativo + chips)
+│   │   │   ├── musica-card.tsx         # linha na area do artista
+│   │   │   ├── musica-item.tsx         # linha do catalogo
+│   │   │   ├── filtro-categorias.tsx
+│   │   │   ├── adicionar-a-playlist-dialog.tsx
+│   │   │   └── avaliar-dialog.tsx
 │   │   ├── avaliacao/
 │   │   │   ├── estrelas.tsx            # input e display
 │   │   │   ├── avaliacao-card.tsx
@@ -666,6 +758,8 @@ soundhub-web/
 │   │   │   ├── errors.ts               # ApiError, parseErro
 │   │   │   ├── guard.ts                # comGuarda (401)
 │   │   │   ├── playlists.ts            # funcoes por dominio
+│   │   │   ├── musicas.ts              # musica e categoria
+│   │   │   ├── artistas.ts             # artista e album
 │   │   │   ├── avaliacoes.ts
 │   │   │   └── usuarios.ts
 │   │   ├── auth/
@@ -1009,7 +1103,7 @@ algo funcionando:
 - [ ] `/playlists/[id]` — cabecalho + lista de musicas ordenada + duracao total
 - [ ] `/playlists/[id]/editar`
 - [ ] Excluir com `AlertDialog`
-- [ ] Adicionar/remover musica (depende de Musica — ver secao 8)
+- [x] Adicionar/remover musica — o catalogo real ja existe (ver secao 8)
 
 ### Etapa 4 — Avaliacoes
 
@@ -1021,6 +1115,9 @@ algo funcionando:
 ### Etapa 5 — Descobrir e perfil
 
 - [ ] `/descobrir` — busca de playlists publicas com debounce
+- [x] `/descobrir?aba=musicas` — catalogo com busca e filtro por categoria
+- [x] `/musicas/[id]` — detalhe com media, avaliacoes e "adicionar a playlist"
+- [x] Area do artista: publicar, editar e excluir musica
 - [ ] `/perfil` — editar nome/email, alterar senha
 
 ### Etapa 6 — Acabamento
@@ -1032,74 +1129,58 @@ algo funcionando:
 
 ---
 
-## 8. Endpoints futuros
+## 8. Musica e Categoria: o que mudou
 
-**Musica e Categoria** estao em desenvolvimento. Como Playlist e Avaliacao dependem de
-Musica, o front precisa de uma estrategia para nao ficar bloqueado.
+Esta secao descrevia como o front trabalharia **sem** os endpoints de Musica e Categoria.
+Eles ficaram prontos, entao aqui fica o registro do que mudou — util para entender commits
+antigos e o que ainda da para melhorar.
 
-> **Artista e Album ja estao prontos** — os endpoints e os tipos estao na secao 2. Esta
-> secao trata apenas do que ainda falta.
+### O catalogo de exemplo saiu
 
-### O que ja da para saber
+Enquanto os endpoints nao existiam, `src/lib/api/musicas.ts` tinha uma lista falsa ligada
+pela variavel `MOCK_MUSICAS` do `.env.local`. **Isso foi removido:** o modulo agora so chama
+a API, e a variavel nao e mais lida em lugar nenhum. Se o seu `.env.local` ainda tiver
+`MOCK_MUSICAS=true`, pode apagar a linha — ela nao faz mais nada.
 
-As entidades existem no banco com esta forma (definida nas migrations):
+Junto com o mock saiu o aviso "catalogo de exemplo" do dialogo de adicionar musica, e o tipo
+`Musica` (que tinha `artista?: string`) virou `MusicaResumo` / `MusicaDetalhe`, espelhando os
+DTOs de verdade. Quem usava `musica.artista` passa a usar `musica.artistaNome`.
 
-```ts
-export interface Musica {
-  id: number;
-  titulo: string;
-  duracao: number; // segundos
-  artistaId: number;
-  albumId: number | null;
-}
+### O que entrou
 
-export interface Categoria {
-  id: number;
-  nome: string;
-}
-```
+| Arquivo | Papel |
+|---|---|
+| `lib/api/musicas.ts` | uma funcao por endpoint de musica e de categoria |
+| `components/musica/musica-form.tsx` | formulario de publicar e editar musica |
+| `components/musica/musica-card.tsx` | linha da musica na area do artista (editar/excluir) |
+| `components/musica/musica-item.tsx` | linha do catalogo, leva ao detalhe |
+| `components/musica/filtro-categorias.tsx` | chips de categoria da aba Musicas |
+| `components/musica/adicionar-a-playlist-dialog.tsx` | escolhe em qual playlist a musica entra |
+| `components/musica/avaliar-dialog.tsx` | avalia (ou edita a nota) direto no detalhe |
+| `app/(app)/musicas/[id]/page.tsx` | detalhe publico da musica |
+| `app/(app)/artista/musicas/...` | publicar e editar musica |
 
-Os endpoints provavelmente seguirao o mesmo padrao REST do resto da API (`GET /musicas`,
-`GET /musicas/{id}`, `POST /musicas` restrito a ARTISTA, etc.), mas **confirme com o Douglas**
-antes de integrar.
+O catalogo virou a aba **Musicas** do `/descobrir`, em vez de uma rota `/musicas` propria:
+a tela de busca ja existia com abas, e duas telas de catalogo seriam redundantes. A rota
+`/musicas/[id]` (detalhe) existe normalmente.
 
-### Como trabalhar sem eles
+### Duas coisas que valem saber
 
-Isole tudo que depende de musica em `src/lib/api/musicas.ts` com dados falsos e um interruptor:
+- **Busca e filtro juntos sao resolvidos no front.** A API tem um endpoint por filtro
+  (`/musicas/busca` e `/musicas/categoria/{id}`); quando os dois vem na URL, a pagina busca
+  pela categoria e filtra o titulo em memoria. Com um catalogo grande, o caminho seria pedir
+  um endpoint com os dois filtros.
+- **Nao junte o `GET /musicas/{id}` com as avaliacoes num `Promise.all` sem cuidado.** As
+  rotas de avaliacao tambem respondem `404` para um id inexistente, e o erro delas chega
+  antes do `notFound()` — a tela vira `500` em vez da pagina de nao encontrado. A musica e
+  buscada primeiro, sozinha, e so depois o resto em paralelo.
 
-```ts
-// src/lib/api/musicas.ts
-import { apiFetch } from "./client";
-import type { Musica } from "@/types/api";
+### O que ainda da para melhorar
 
-const USAR_MOCK = process.env.MOCK_MUSICAS === "true";
-
-const MUSICAS_FALSAS: Musica[] = [
-  { id: 1, titulo: "Musica Um", duracao: 210, artistaId: 1, albumId: null },
-  { id: 2, titulo: "Musica Dois", duracao: 180, artistaId: 1, albumId: null },
-];
-
-export async function listarMusicas(): Promise<Musica[]> {
-  if (USAR_MOCK) return MUSICAS_FALSAS;
-  return apiFetch<Musica[]>("/musicas", { next: { revalidate: 300 } });
-}
-```
-
-Com `MOCK_MUSICAS=true` no `.env.local`, voce constroi a tela de "adicionar musica a playlist"
-hoje. Quando a API ficar pronta, remove a variavel — nenhum componente muda.
-
-> **Importante:** `POST /playlists/{id}/musicas` **ja funciona hoje** — ele so precisa de um
-> `musicaId` que exista no banco. Para testar de verdade antes dos endpoints ficarem prontos,
-> insira algumas musicas direto no banco e use os ids reais.
-
-### Telas a acrescentar depois
-
-- `/musicas` — catalogo com filtro por categoria
-- `/musicas/[id]` — detalhe, media de avaliacoes, botao "adicionar a playlist"
-- `/artistas/[id]` — perfil com albuns e musicas (a API ja esta pronta, ver secao 2)
-- Area do artista (so `tipo === "ARTISTA"`) para cadastrar album e musica
-
-Deixe a sidebar preparada para esses itens, mesmo que desabilitados no inicio.
+- Paginacao do catalogo (a API ainda nao pagina nada).
+- Tela de manutencao de categorias (hoje so a API cria e renomeia; o seed da V7 ja cobre o
+  uso normal).
+- Reordenar as musicas dentro da playlist arrastando.
 
 ---
 
@@ -1112,6 +1193,7 @@ Conferir antes de apresentar:
 - [ ] Login e registro funcionando, com erro tratado
 - [ ] Rotas protegidas redirecionam para `/login`
 - [ ] CRUD completo de playlist
+- [ ] CRUD completo de musica (e de categoria pela API)
 - [ ] Adicionar e remover musica, com ordem correta
 - [ ] CRUD de avaliacao, com estrelas e media
 - [ ] Busca de playlists publicas
@@ -1137,7 +1219,8 @@ Conferir antes de apresentar:
 
 - [ ] README do front com print das telas e instrucoes
 - [ ] Seed de dados para a demo (usuarios, playlists e avaliacoes prontos)
-- [ ] Roteiro da demo ensaiado: registrar → criar playlist → adicionar musica → avaliar
+- [ ] Roteiro da demo ensaiado: registrar → criar perfil de artista → publicar musica →
+      criar playlist → adicionar musica → avaliar
 
 ---
 
