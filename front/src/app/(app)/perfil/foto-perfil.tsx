@@ -22,7 +22,10 @@ import { iniciais } from "@/lib/utils/formato";
 import type { Usuario } from "@/types/api";
 
 const TIPOS_ACEITOS = ["image/png", "image/jpeg"];
-const TAMANHO_MAXIMO = 2 * 1024 * 1024; // 2MB
+const TAMANHO_MAXIMO = 2 * 1024 * 1024; // 2MB de arquivo
+
+/** Mesmo limite do backend (@Size(max = 2_800_000) no FotoRequestDTO). */
+const LIMITE_BASE64 = 2_800_000;
 
 export function FotoPerfil({ usuario }: { usuario: Usuario }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +51,13 @@ export function FotoPerfil({ usuario }: { usuario: Usuario }) {
 
     leitor.onload = () => {
       const dataUri = String(leitor.result);
+
+      // o base64 infla o arquivo em ~33%: quem manda e o tamanho do data URI
+      if (dataUri.length > LIMITE_BASE64) {
+        toast.error("A imagem é muito grande. Escolha uma menor ou comprima antes.");
+        return;
+      }
+
       setPrevia(dataUri);
 
       startTransition(async () => {

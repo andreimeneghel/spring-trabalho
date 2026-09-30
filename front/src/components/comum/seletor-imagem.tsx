@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const TIPOS_ACEITOS = ["image/png", "image/jpeg"];
-const TAMANHO_MAXIMO = 2 * 1024 * 1024; // 2MB
+const TAMANHO_MAXIMO = 2 * 1024 * 1024; // 2MB de arquivo
+
+/** Mesmo limite do backend (@Size(max = 2_800_000) nos DTOs de imagem). */
+const LIMITE_BASE64 = 2_800_000;
 
 /**
  * Escolhe uma imagem e devolve um data URI base64 num input hidden, para o
@@ -46,7 +49,21 @@ export function SeletorImagem({
 
     const leitor = new FileReader();
     leitor.onerror = () => toast.error("Não foi possível ler o arquivo.");
-    leitor.onload = () => setImagem(String(leitor.result));
+    leitor.onload = () => {
+      const dataUri = String(leitor.result);
+
+      /*
+        O backend valida o tamanho do data URI, nao o do arquivo: o base64 infla
+        em ~33%. Conferimos aqui tambem para o usuario ver o erro na hora, em vez
+        de so descobrir quando a API recusar.
+      */
+      if (dataUri.length > LIMITE_BASE64) {
+        toast.error("A imagem é muito grande. Escolha uma menor ou comprima antes.");
+        return;
+      }
+
+      setImagem(dataUri);
+    };
     leitor.readAsDataURL(arquivo);
   }
 
